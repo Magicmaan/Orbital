@@ -7,7 +7,7 @@ import sys
 from Widgets.CanvasWindow import *
 from Program import Program
 
-
+    
 styleSheet = """
     background-color: red;
     color: black;
