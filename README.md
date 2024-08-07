@@ -13,6 +13,7 @@ Orbital is a lightweight and user-friendly pixel art editor written in Python. D
 - **Color Palette:** Easily accessible and customizable color palette.
 - **Drawing Tools:** Basic drawing tools such as pencil, eraser, fill, and shape tools.
 - **Undo/Redo:** Infinite undo and redo functionality to experiment freely.
+- **Animation / Onion Skin** Layer ontop of and work seamlessly
 - **Export Options:** Export your artwork to popular image formats like PNG and GIF.
 - **Keyboard Shortcuts:** Enhanced productivity with keyboard shortcuts for common actions.
 
