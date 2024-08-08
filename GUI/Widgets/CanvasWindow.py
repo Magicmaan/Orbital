@@ -36,63 +36,64 @@ class Image(QWidget):
         else:
             return False
     
-    
 
-
-class Canvas(QWidget):
+class Viewport(QWidget):
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
 
-        sX, sY = 256, 256
+        sX, sY = 128, 128
         self.fixed_size = QSize(sX, sY)
 
-        self.resize(sX, sY)  # Minimum size to handle fixed resolution drawing
+        #self.resize(sX, sY)  # Minimum size to handle fixed resolution drawing
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.viewport = QPixmap(self.fixed_size)
         self.image = Image()
-
+        self.imageScaled = QPixmap(self.fixed_size)
+        self.setStyleSheet("background:purple;")
         self.imageScale = 1
-        self.imagePosition = (0, 0)
+        self.imagePosition = QPoint(0, 0)
 
         self.shapes = []
         self.drawing = False
         self.lastPoint = QPoint()
         self.currentPoint = QPoint()
+        self.dragging = False
 
         self.pixmap = QPixmap(self.fixed_size)
-        self.render_content()  # Draw initial content
+        self.RenderScaleImage()  # Draw initial content
+
+        self.layout = QVBoxLayout(self)
+        self.layout.setContentsMargins(0, 0, 0, 0)  # No margins so widgets align perfectly
+        self.layout.setSpacing(0)
+        # Example widget: QLabel on top of the pixmap
+        self.label = QLabel("This is a label on top of the pixmap", self)
+        self.label.setStyleSheet("color: white;")
+        self.label.setStyleSheet("background:transparent;")
+        self.layout.addWidget(self.label, alignment=Qt.AlignTop)
 
     
 
-    def render_content(self):
-        self.viewport = QPixmap(self.size())
-        # Clear the viewport before drawing
-        self.viewport.fill(QColor('red'))  # Clear background with white
-
-        # Create a painter for the viewport
-        painter = QPainter(self.viewport)
-        painter.setPen(QPen(QColor('black'), 1))
+    def RenderScaleImage(self):
+        self.imageScaled = QPixmap(self.image.image.size()*self.imageScale)
 
         # Get the image
         image = self.image.image
 
-        # Define the source and destination rectangles
+        # Define the source and destination rects to draw to
         sourceRect = QRect(0, 0, image.width(), image.height())
-        destRect = QRect(self.imagePosition[0], self.imagePosition[1], 
-                         int(image.width() * self.imageScale), 
-                         int(image.height() * self.imageScale))
+        destRect = QRect(0, 0, 
+                         int(self.imageScaled.width()), 
+                         int(self.imageScaled.height()))
 
-        # Draw the scaled image onto the viewport
+        # Create a painter for the viewport
+        painter = QPainter(self.imageScaled)
+
+        # Draw the scaled image
         painter.drawPixmap(destRect, image, sourceRect)
-
-        # Draw any shapes on the viewport
-        for shape in self.shapes:
-            painter.drawLine(shape[0], shape[1])
 
         painter.end()
 
         # Copy the viewport to the main pixmap
-        self.pixmap = self.viewport.copy()
+        self.pixmap = self.imageScaled.copy()
 
     
     def _resizeImage(self):
@@ -103,20 +104,21 @@ class Canvas(QWidget):
 
     def _mapToFixedSize(self, point):
         # Map the widget's coordinates to the fixed-size resolution
-        scale_factor = self.fixed_size.width() / self.width()
+        scale_factor = self.size().width() / self.image.size().width()
         return QPoint(int(point.x() * scale_factor), int(point.y() * scale_factor))
 
     def _mapFromFixedSize(self, point):
         # Map the fixed-size coordinates to the widget's coordinate system
-        scale_factor = self.width() / self.fixed_size.width()
+        scale_factor = self.imageScale
         return QPoint(int(point.x() * scale_factor), int(point.y() * scale_factor))
 
     def paintEvent(self, event):
-            painter = QPainter(self)
-            # Scale the fixed-size pixmap to fit the widget's size using nearest neighbor scaling
-            scaled_pixmap = self.pixmap.scaled(self.size(), Qt.KeepAspectRatioByExpanding, Qt.FastTransformation)
-            painter.drawPixmap(0, 0, scaled_pixmap)
-            painter.end()
+
+        painter = QPainter(self)
+        # Scale the fixed-size pixmap to fit the widget's size using nearest neighbor scaling
+        scaled_pixmap = self.pixmap#.scaled(self.size(), Qt.KeepAspectRatioByExpanding, Qt.FastTransformation)
+        painter.drawPixmap(self.imagePosition.x(), self.imagePosition.y(), scaled_pixmap)
+
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
@@ -128,15 +130,44 @@ class Canvas(QWidget):
             self.imageScale += 0.1
             #exportTexture(self.image,"Resources/","png")
 
-        self.render_content()
+        if event.button() == Qt.MiddleButton:
+            self.dragging = True
+            self.dragging_pos = event.position().toPoint()
+            self.offset = self.imagePosition - self.dragging_pos
+
+
+        self.RenderScaleImage()
         self.update()
+
+    def wheelEvent(self, event: QWheelEvent):
+        # Get the amount of scrolling
+        delta = event.angleDelta().y()
+        # Adjust value based on scroll direction
+        if delta > 0:
+            self.imageScale += 0.1
+        else:
+            self.imageScale -= 0.1
+        
+        self.RenderScaleImage()
+        self.update()
+
     def mouseMoveEvent(self, event):
         if self.drawing:
             self.currentPoint = self._mapToFixedSize(event.position().toPoint())
             self.shapes.append((self.lastPoint, self.currentPoint))
-            self.render_content()  # Re-render content with new shapes
+            self.RenderScaleImage()  # Re-render content with new shapes
             self.update()  # Request a repaint to finalize the line
             self.lastPoint = self.currentPoint  # Update last point for the next segment
+        
+        if self.dragging:
+            cpos = self.imagePosition
+
+            self.imagePosition = event.position() + self.offset
+
     def mouseReleaseEvent(self, event):
         if event.button() == Qt.LeftButton:
             self.drawing = False
+        
+        if event.button() == Qt.MiddleButton:
+            self.dragging = False
+            

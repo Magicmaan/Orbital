@@ -50,6 +50,7 @@ class customWindow(QWidget):
         self.dragging = False
         self.dragging_pos = QPoint()
         self.resize_edge_size = 5  # Width of the area where resizing is possible
+        self.lastResize = -1
 
         print("Custom Window Enabled")
 
@@ -70,7 +71,6 @@ class customWindow(QWidget):
     def mouseMoveEvent(self, event):
         pos = self.parent.mapFromGlobal(event.globalPos())
         sideHit = self.detectEdge(pos)
-        print(sideHit)
         if self.dragging: #check if holding down mouse
             if sideHit[1] or self.lastResize==1:
                 self.parent.setFixedWidth(pos.x())

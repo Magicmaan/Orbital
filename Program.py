@@ -5,7 +5,7 @@ from PySide6.QtWidgets import *
 from PySide6.QtWidgets import QWidget
 
 from GUI.Widgets.Programbar import Programbar   
-from GUI.Widgets.CanvasWindow import Canvas
+from GUI.Widgets.CanvasWindow import Viewport
 from GUI.Widgets.Toolbar import Toolbar
 
 from Utils import *
@@ -110,8 +110,8 @@ class Program(QMainWindow):
         
         
         #Create and configure the Canvas widget
-        self.canvas = Canvas()
-        self.canvas.setStyleSheet("border: purple 5px solid;")
+        self.canvas = Viewport()
+        #self.canvas.setStyleSheet("border: purple 5px solid;")
         # Add the Canvas widget to the layout
         centerContainerLayout.addWidget(self.canvas,1,1)
         
