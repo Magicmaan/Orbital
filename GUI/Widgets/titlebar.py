@@ -3,10 +3,10 @@ from PySide6.QtGui import QIcon, QPixmap, QCursor
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QSizePolicy, QSpacerItem, QWidget
 
 class Titlebar(QWidget):
-    def __init__(self, program,parent=None):
+    def __init__(self, appWindow,parent=None):
         super().__init__(parent)
         self.setObjectName("Titlebar")
-        self.program = program
+        self.appWindow = appWindow
         self.setAutoFillBackground(True)
 
         self.mouse_offset = QPoint(0,0)
@@ -42,43 +42,43 @@ class Titlebar(QWidget):
         self.inner = QWidget()
         self.inner.setObjectName("Container")
 
-        self.horizontalLayout = QHBoxLayout(self.inner)
-        self.horizontalLayout.setSpacing(0)
+        self.layout = QHBoxLayout(self.inner)
+        self.layout.setSpacing(0)
         
         self.containerLayout.addWidget(self.inner)
         self.inner.setContentsMargins(0,0,0,0)
-        self.horizontalLayout.setContentsMargins(0,0,0,0)
+        self.layout.setContentsMargins(0,0,0,0)
         
         
 
         
-        self.horizontalLayout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         self.icon = QLabel(self)
         self.icon.setObjectName("icon")
         self.icon.setPixmap(QPixmap("Resources/icons/icon.png").scaled(self.icon_size,self.icon_size, Qt.KeepAspectRatio, Qt.FastTransformation))
         self.icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.horizontalLayout.addWidget(self.icon)
+        self.layout.addWidget(self.icon)
 
         self.title = QLabel(self)
         self.title.setText("Orb")
-        self.horizontalLayout.addWidget(self.title)
+        self.layout.addWidget(self.title)
 
         #spacer
         self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-        self.horizontalLayout.addItem(self.horizontalSpacer)
+        self.layout.addItem(self.horizontalSpacer)
 
         #minimise button
-        self.minimiseBtn = self.addButton("MinimiseButton",self.program.showMinimized,"Resources/icons/maximise.png",self.icon_size)
-        self.horizontalLayout.addWidget(self.minimiseBtn)
+        self.minimiseBtn = self.addButton("MinimiseButton",self.appWindow.parent.showMinimized,"Resources/icons/maximise.png",self.icon_size)
+        
 
         #maximise button
-        self.maximiseBtn = self.addButton("MaximiseButton",lambda:self.program.setWindowState(self.program.windowState() ^ Qt.WindowFullScreen),"Resources/icons/maximise.png",self.icon_size)
-        self.horizontalLayout.addWidget(self.maximiseBtn)
+        self.maximiseBtn = self.addButton("MaximiseButton",lambda:self.appWindow.parent.setWindowState(self.appWindow.parent.windowState() ^ Qt.WindowFullScreen),"Resources/icons/maximise.png",self.icon_size)
+        self.layout.addWidget(self.maximiseBtn)
 
         #close app
-        self.exitBtn = self.addButton("ExitButton",self.program.close,"Resources/icons/exit.png",self.icon_size)
-        self.horizontalLayout.addWidget(self.exitBtn)
+        self.exitBtn = self.addButton("ExitButton",self.appWindow.parent.close,"Resources/icons/exit.png",self.icon_size)
+        self.layout.addWidget(self.exitBtn)
 
     #helper function to add button to it in less code
     def addButton(self,name,func,icon,size) -> QPushButton:
@@ -94,13 +94,15 @@ class Titlebar(QWidget):
         #link button to function
         btn.clicked.connect(func)
 
+        self.layout.addWidget(btn)
+
         return btn
     
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
             self.mouse_pressed = True
             cpos = QCursor.pos()
-            self.mouse_offset = self.program.mapFromGlobal(cpos)
+            self.mouse_offset = self.appWindow.parent.mapFromGlobal(cpos)
 
 
     def mouseReleaseEvent(self, event):
@@ -110,5 +112,5 @@ class Titlebar(QWidget):
     def mouseMoveEvent(self, event):
         if self.mouse_pressed:
             # Optionally handle mouse movement while holding    
-            pos = self.program.program.pos()
-            self.program.program.move(pos + event.position().toPoint() - self.mouse_offset)
+            pos = self.appWindow.parent.pos()
+            self.appWindow.parent.move(pos + event.position().toPoint() - self.mouse_offset)

@@ -45,9 +45,9 @@ class Canvas(QWidget):
 
         sX, sY = 256, 256
         self.fixed_size = QSize(sX, sY)
-        self.setMinimumSize(sX, sY)  # Minimum size to handle fixed resolution drawing
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
+        self.resize(sX, sY)  # Minimum size to handle fixed resolution drawing
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.viewport = QPixmap(self.fixed_size)
         self.image = Image()
 
@@ -65,8 +65,9 @@ class Canvas(QWidget):
     
 
     def render_content(self):
+        self.viewport = QPixmap(self.size())
         # Clear the viewport before drawing
-        self.viewport.fill(QColor('black'))  # Clear background with white
+        self.viewport.fill(QColor('red'))  # Clear background with white
 
         # Create a painter for the viewport
         painter = QPainter(self.viewport)
@@ -113,9 +114,10 @@ class Canvas(QWidget):
     def paintEvent(self, event):
             painter = QPainter(self)
             # Scale the fixed-size pixmap to fit the widget's size using nearest neighbor scaling
-            scaled_pixmap = self.pixmap.scaled(self.size(), Qt.KeepAspectRatio, Qt.FastTransformation)
+            scaled_pixmap = self.pixmap.scaled(self.size(), Qt.KeepAspectRatioByExpanding, Qt.FastTransformation)
             painter.drawPixmap(0, 0, scaled_pixmap)
             painter.end()
+
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
             self.lastPoint = self._mapToFixedSize(event.position().toPoint())
@@ -124,7 +126,7 @@ class Canvas(QWidget):
 
         if event.button() == Qt.RightButton:
             self.imageScale += 0.1
-            exportTexture(self.image,"Resources/","png")
+            #exportTexture(self.image,"Resources/","png")
 
         self.render_content()
         self.update()

@@ -4,48 +4,30 @@ from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 from PySide6.QtWidgets import QWidget
 
-from Widgets.Programbar import Programbar   
-from Widgets.CanvasWindow import Canvas
-from Widgets.Toolbar import Toolbar
-from Widgets.titlebar import Titlebar
+from GUI.Widgets.Programbar import Programbar   
+from GUI.Widgets.CanvasWindow import Canvas
+from GUI.Widgets.Toolbar import Toolbar
 
 from Utils import *
 from DiscordPresence import *
 
-class customWindow(QWidget):
-    def __init__(self, program, parent=None):
-        super().__init__(parent)
-        self.program = program
-        program.setWindowFlags(Qt.FramelessWindowHint) #disable default border
-        self.layout = QVBoxLayout(self)
-        self.setObjectName("windowContainer")
-        self.setContentsMargins(0,0,0,0)
-        self.layout.setContentsMargins(0,0,0,0)
-
-
-        self.setStyleSheet("QWidget#windowContainer{border: solid green 2px;}")
-
-        self.layout.setSpacing(0)
-
-         #titlebar init
-        program.titlebar = Titlebar(self)
-        self.layout.addWidget(program.titlebar)
+from CustomWindow import customWindow,defaultWindow
         
 
 
 
 
 class Program(QMainWindow):
-    def __init__(self, useCustomWindow=True,parent=None) -> None:
+    def __init__(self, useCustomWindow=False,parent=None) -> None:
         super().__init__(parent)
         
         self.app = QApplication.instance()
         self.setMouseTracking(True)
-
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         #setup window
         self.setWindowTitle("Orb")
-        self.setMinimumSize(800, 600)  # Minimum size for the window
+        self.setMinimumSize(805, 605)  # Minimum size for the window
         self.appIcon = QIcon("Resources/icons/icon.png")
         self.app.setWindowIcon(self.appIcon)
         self.setContentsMargins(0,0,0,0)
@@ -57,51 +39,106 @@ class Program(QMainWindow):
     
 
         #Head container for app
-        appContainer = QWidget()
-        appContainer.setObjectName("appContainer")
-        appContainer.resize(800,600)
-        appContainer.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
-        appContainer.setContentsMargins(0,0,0,0)
+        self.appContainer = QWidget(self)
+        # Set the central widget for the MainWindow
+        self.setCentralWidget(self.appContainer)
 
+        self.appContainer.setObjectName("appContainer")
+        self.appContainer.resize(800,600)
+        self.appContainer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        
+
+        
         # Custom Frame 
         if useCustomWindow:
             self.window = customWindow(self)
+            
             self.windowContainer = self.window.layout
-            print("Custom Frame Enabled")
-        else:
-            self.window = QWidget()
-            self.windowContainer = QVBoxLayout(self.window)
 
-        self.layout = QVBoxLayout(appContainer)
+            self.appContainer.setContentsMargins(6,6,6,6)
+            self.appContainer.setStyleSheet("background:red;border-radius:0px;")
+        else:
+            self.window = defaultWindow(self)
+            self.windowContainer = self.window.layout
+        
+        self.window.resize(self.size())
+        self.window.setStyleSheet("background:blue;border-radius:0px;")
+        self.layout = QGridLayout(self.appContainer)
         self.layout.setSpacing(0)
         self.layout.setContentsMargins(0,0,0,0)
-        self.layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        self.layout.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        self.layout.addWidget(self.window,0,0)
+        self.layout.setRowStretch(0,2)
+        self.layout.setColumnStretch(0,2)
 
-        self.layout.addWidget(self.window)
+        #self.layout.addStretch()  # To fill the remaining space if needed
+
+
+        self.windowContainer.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
-       
 
 
-        
+
         centerContainer = QWidget()
-        centerContainerLayout = QHBoxLayout(centerContainer)
-        self.windowContainer.addWidget(centerContainer)
+        centerContainer.setParent(self.window)
+        centerContainer.setStyleSheet("background:green;border-radius:0px;")
+        centerContainer.resize(QSize(800,600))
+        centerContainer.setSizePolicy(QSizePolicy.Expanding,QSizePolicy.Expanding)
+        centerContainerLayout = QGridLayout(centerContainer)
+        centerContainerLayout.setContentsMargins(2,2,2,2)
+        centerContainerLayout.setSpacing(5)
+        self.windowContainer.addWidget(centerContainer,0,0)
+        self.windowContainer.setRowStretch(0,1)
+        self.windowContainer.setColumnStretch(0,1)
 
+        leftBar = QWidget()
+        leftBar.setFixedWidth(200)
+        leftBar.setContentsMargins(0,0,0,0)
+        leftBar.setSizePolicy(QSizePolicy.Fixed,QSizePolicy.Expanding)
+        leftBar.setStyleSheet("background:green;")
+        lBarStyle = QVBoxLayout(leftBar)
+        lBarStyle.addWidget(QLabel("Hi    "))
+        centerContainerLayout.addWidget(leftBar,0,0)
+
+
+        centerContainerLayout.addWidget(Toolbar(self),0,1)
         
         
         #Create and configure the Canvas widget
         self.canvas = Canvas()
-
+        self.canvas.setStyleSheet("border: purple 5px solid;")
         # Add the Canvas widget to the layout
-        centerContainerLayout.addWidget(self.canvas)
-        self.layout.addStretch()  # To fill the remaining space if needed
+        centerContainerLayout.addWidget(self.canvas,1,1)
+        
+        centerContainerLayout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        
+        
 
-        # Set the central widget for the MainWindow
-        self.setCentralWidget(appContainer)
+        RightBar = QWidget()
+        RightBar.setFixedWidth(200)
+        RightBar.setContentsMargins(0,0,0,0)
+        RightBar.setSizePolicy(QSizePolicy.Fixed,QSizePolicy.Expanding)
+        RightBar.setStyleSheet("background:blue;")
+        RBarStyle = QVBoxLayout(RightBar)
+        RBarStyle.addWidget(QLabel("Hi    "))
+        centerContainerLayout.addWidget(RightBar,1,2)
+
+        cl = centerContainerLayout
+        cl.setRowStretch(1,1)
+        cl.setColumnStretch(1,1)
+
+        
 
         print("Program Started")
+
     
-        
+
+    def isCustomWindow(self) -> bool:
+        if self.window.objectName() == "customWindow":
+            return True
+        else:
+            return False
+         
     def resizeEvent(self, event):
         # Call the base class implementation
         super().resizeEvent(event)
@@ -128,16 +165,6 @@ class Program(QMainWindow):
     
 
 
-    def canvasInit(self) -> bool:
-        # Create and configure the Canvas widget
-        self.canvas = Canvas(self)
-        self.canvas.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
-        # Add the Canvas widget to the layout
-        self.layout.addWidget(self.canvas)
-        self.layout.addStretch()  # To fill the remaining space if needed
-
-        return True
 
 
 
