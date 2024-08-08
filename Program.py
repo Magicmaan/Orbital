@@ -49,30 +49,31 @@ class Program(QMainWindow):
         
 
         
-        # Custom Frame 
-        if useCustomWindow:
-            self.window = customWindow(self)
-            
-            self.windowContainer = self.window.layout
-
-            self.appContainer.setContentsMargins(6,6,6,6)
-            self.appContainer.setStyleSheet("background:red;border-radius:0px;")
-        else:
-            self.window = defaultWindow(self)
-            self.windowContainer = self.window.layout
         
-        self.window.resize(self.size())
-        self.window.setStyleSheet("background:blue;border-radius:0px;")
-        self.layout = QGridLayout(self.appContainer)
+       
+        
+        self.layout = QVBoxLayout(self.appContainer)
         self.layout.setSpacing(0)
         self.layout.setContentsMargins(0,0,0,0)
         self.layout.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        self.layout.addWidget(self.window,0,0)
-        self.layout.setRowStretch(0,2)
-        self.layout.setColumnStretch(0,2)
+        
 
         #self.layout.addStretch()  # To fill the remaining space if needed
+        # Custom Frame 
+        if useCustomWindow:
+            self.window = customWindow(self)
+            self.windowContainer = self.window.layout
+            
+        else:
+            self.window = defaultWindow(self)
+            self.windowContainer = self.window.layout
 
+        
+        self.window.resize(self.size())
+        self.window.setStyleSheet("background:blue;border-radius:0px;")
+        self.layout.addWidget(self.window)
+        #self.layout.setRowStretch(0,2)
+        #self.layout.setColumnStretch(0,2)
 
         self.windowContainer.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
@@ -95,10 +96,14 @@ class Program(QMainWindow):
         leftBar.setFixedWidth(200)
         leftBar.setContentsMargins(0,0,0,0)
         leftBar.setSizePolicy(QSizePolicy.Fixed,QSizePolicy.Expanding)
-        leftBar.setStyleSheet("background:green;")
+        leftBar.setStyleSheet("background:purple;")
         lBarStyle = QVBoxLayout(leftBar)
-        lBarStyle.addWidget(QLabel("Hi    "))
-        centerContainerLayout.addWidget(leftBar,0,0)
+        m = QLabel("Hi     ")
+        m.setContentsMargins(0,0,0,0)
+        m.setStyleSheet("background: purple;border: 5px solid red")
+        #lBarStyle.addWidget(m)
+        centerContainerLayout.addWidget(m,0,0)
+        centerContainerLayout.addWidget(leftBar,1,0)
 
 
         centerContainerLayout.addWidget(Toolbar(self),0,1)

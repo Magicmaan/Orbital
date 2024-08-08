@@ -69,7 +69,7 @@ class Titlebar(QWidget):
         self.layout.addItem(self.horizontalSpacer)
 
         #minimise button
-        self.minimiseBtn = self.addButton("MinimiseButton",self.appWindow.parent.showMinimized,"Resources/icons/maximise.png",self.icon_size)
+        self.minimiseBtn = self.addButton("MinimiseButton",self.appWindow.parent.showMinimized,"Resources/icons/minimise.png",self.icon_size)
         
 
         #maximise button

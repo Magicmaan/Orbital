@@ -45,18 +45,23 @@ class Toolbar(QWidget):
         self.containerLayout.addWidget(self.inner)
         self.inner.setContentsMargins(0,0,0,0)
         self.layout.setContentsMargins(0,0,0,0)
-        self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
         self.title = QLabel(self)
+        
         self.title.setText("Orb")
         self.layout.addWidget(self.title)
 
-        #spacer
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-        self.layout.addItem(self.horizontalSpacer)
+        
 
         #minimise button
-        self.minimiseBtn = self.addButton("MinimiseButton",self.program.showMinimized,"Resources/icons/maximise.png",self.icon_size)
+        self.minimiseBtn = self.addButton("MinimiseButton",self.program.showMinimized,"Resources/icons/tools/brush.png",self.icon_size)
+        #minimise button
+        self.minimiseBtn = self.addButton("MinimiseButton",self.program.showMinimized,"Resources/icons/tools/eraser.png",self.icon_size)
+        #minimise button
+        self.minimiseBtn = self.addButton("MinimiseButton",self.program.showMinimized,"Resources/icons/tools/bucket.png",self.icon_size)
+        #minimise button
+        self.minimiseBtn = self.addButton("MinimiseButton",self.program.showMinimized,"Resources/icons/tools/picker.png",self.icon_size)
 
         #maximise button
         self.maximiseBtn = self.addButton("MaximiseButton",lambda:self.program.setWindowState(self.program.windowState() ^ Qt.WindowFullScreen),"Resources/icons/maximise.png",self.icon_size)
