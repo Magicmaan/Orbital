@@ -110,5 +110,5 @@ class Titlebar(QWidget):
     def mouseMoveEvent(self, event):
         if self.mouse_pressed:
             # Optionally handle mouse movement while holding    
-            pos = self.program.pos()
-            self.program.move(pos + event.position().toPoint() - self.mouse_offset)
+            pos = self.program.program.pos()
+            self.program.program.move(pos + event.position().toPoint() - self.mouse_offset)

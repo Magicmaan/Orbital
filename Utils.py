@@ -6,7 +6,7 @@ import sys
 #add font from string to application
 #returns fontID 
 #returns -1 if fail
-def addFont(path: str) -> int:
+def _addFont(path: str) -> int:
     font_id = QFontDatabase.addApplicationFont(path)
     if font_id == -1:
         print(f"Failed to load font {path}")
