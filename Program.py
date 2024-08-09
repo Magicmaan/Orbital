@@ -46,7 +46,7 @@ class Program(QMainWindow):
         font_Path = "Resources/fonts/minecraft_font.ttf"
         self.setCustFont(font_Path,8)
         #Head container for app
-        self.appContainer = QWidget(self)
+        self.appContainer = pixelWidget(self)
         # Set the central widget for the MainWindow
         self.setCentralWidget(self.appContainer)
 
@@ -101,11 +101,7 @@ class Program(QMainWindow):
         leftBar.setLayout(QVBoxLayout())
         removePadding(leftBar)
 
-        m = QLabel("Hi     ")
-        removePadding(m)
-        m.setStyleSheet("background: purple;border: 5px solid red")
-        #lBarStyle.addWidget(m)
-        centerContainerLayout.addWidget(m,0,0)
+       
         centerContainerLayout.addWidget(leftBar,1,0)
 
 

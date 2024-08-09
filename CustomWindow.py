@@ -1,10 +1,10 @@
 from PySide6.QtCore import QEvent, QObject, QPoint, QSize, Qt
-from PySide6.QtGui import QCursor
+from PySide6.QtGui import QCursor, QPainter, QPixmap
 from PySide6.QtWidgets import (QApplication, QGridLayout, QMainWindow,
                                QSizePolicy, QWidget)
 
 from GUI.Widgets.titlebar import Titlebar
-from GUI.Widgets.WidgetUtils import removePadding
+from GUI.Widgets.WidgetUtils import drawPixelBorder, removePadding
 from Utils import *
 
 
@@ -34,7 +34,6 @@ class customWindow(QWidget):
         self.parent.setAttribute(Qt.WA_TranslucentBackground)  # Disable default border
         
         self.parent.appContainer.setStyleSheet("background:red;border-radius:0px;")
-
         self.resize(self.parent.size())
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setObjectName("customWindow")
@@ -42,7 +41,7 @@ class customWindow(QWidget):
         self.setLayout(QGridLayout())
         removePadding(self)
 
-        self.parent.appContainer.setContentsMargins(2, 6, 2, 2)  # Add border
+        self.parent.appContainer.setContentsMargins(6,8,6,6)  # Add border
 
         self.customTitleBar()
 
@@ -155,6 +154,17 @@ class customWindow(QWidget):
                 self.parent.showNormal()
             else:
                 self.parent.showMaximized()
+    
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        
+        # Fill the entire widget with a green color
+        # Draw edges from the pixmap
+        #painter.fillRect(self.rect(),QColor(128,0,128))
+        drawPixelBorder(self,painter,QPixmap("Resources/button.png"))
+        
+        # End painting
+        painter.end()
 
     
 

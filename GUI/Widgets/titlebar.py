@@ -17,7 +17,7 @@ class Titlebar(QWidget):
         
         self.objheight = 12
         self.icon_size = 24
-        self.setContentsMargins(0,0,0,0)
+        
         self.resize(800, self.objheight)  # Adjusted size to fit the title bar
         
         self.setSizePolicy(QSizePolicy.Expanding,QSizePolicy.Fixed)
@@ -25,6 +25,7 @@ class Titlebar(QWidget):
         self.layout().setObjectName("containerLayout")
         self.layout().setAlignment(Qt.AlignmentFlag.AlignLeft)
         removePadding(self)
+        self.setContentsMargins(5,5,5,5)
 
         self.setStyleSheet(
             "background: transparent;"
@@ -85,7 +86,8 @@ class Titlebar(QWidget):
         
         # Fill the entire widget with a green color
         # Draw edges from the pixmap
-        painter.fillRect(self.rect(),QColor(128,0,128))
+        #painter.fillRect(self.rect(),QColor(128,0,128))
+        drawPixelBorder(self,painter,QPixmap("Resources/button.png"))
         
         # End painting
         painter.end()
