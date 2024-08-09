@@ -1,5 +1,0 @@
-{
-    "python.analysis.typeCheckingMode": "off",
-    "python.sortImports.path": "isort",
-    "editor.formatOnSave": true
-}
