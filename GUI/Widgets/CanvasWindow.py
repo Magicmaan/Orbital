@@ -9,7 +9,7 @@ from os.path import exists
 
 
 from DialogBox import ErrorDialog,SuccessDialog
-from GUI.Widgets.WidgetUtils import *
+from GUI.Widgets.WidgetUtils import removePadding,drawPixelBorder
 
 DEFAULT_IMG = "Resources/default_canvas.png"
 
@@ -60,14 +60,18 @@ class Viewport(QWidget):
         self.pixmap = QPixmap(self.fixed_size)
         self.RenderScaleImage()  # Draw initial content
 
-        self.layout = QVBoxLayout(self)
-        self.layout.setContentsMargins(0, 0, 0, 0)  # No margins so widgets align perfectly
-        self.layout.setSpacing(0)
+        self.setLayout(QVBoxLayout())
+        layout = self.layout()
+
+        removePadding(self)
+        self.setContentsMargins(5,5,5,5)
+
+
         # Example widget: QLabel on top of the pixmap
         self.label = QLabel("This is a label on top of the pixmap", self)
         self.label.setStyleSheet("color: white;")
         self.label.setStyleSheet("background:transparent;")
-        self.layout.addWidget(self.label, alignment=Qt.AlignTop)
+        layout.addWidget(self.label, alignment=Qt.AlignTop)
 
     
 
@@ -116,7 +120,7 @@ class Viewport(QWidget):
         painter = QPainter(self)
 
         drawPixelBorder(self,painter,QPixmap("Resources/button.png"),2,4)
-        
+
         painter.drawPixmap(self.imagePosition.x(), self.imagePosition.y(), self.pixmap)
 
 
