@@ -7,6 +7,7 @@ from CustomWindow import customWindow, defaultWindow
 from DiscordPresence import *
 from GUI.Widgets.CanvasWindow import Viewport
 from GUI.Widgets.Toolbar import Toolbar
+from GUI.Widgets.Contextbar import Contextbar
 from GUI.Widgets.WidgetUtils import drawPixelBorder, removePadding
 from Utils import getFont
 
@@ -14,13 +15,14 @@ from Utils import getFont
 class pixelWidget(QWidget):
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
+        self.border = "Resources/button.png"
     
     def paintEvent(self, event):
         painter = QPainter(self)
         
         # Fill the entire widget with a green color
         # Draw edges from the pixmap
-        drawPixelBorder(self,painter,QPixmap("Resources/button.png"))
+        drawPixelBorder(self,painter,QPixmap(self.border))
         
         # End painting
         #painter.end()
@@ -47,6 +49,7 @@ class Program(QMainWindow):
         self.setCustFont(font_Path,8)
         #Head container for app
         self.appContainer = pixelWidget(self)
+        self.appContainer.border = "Resources/coloured.png"
         # Set the central widget for the MainWindow
         self.setCentralWidget(self.appContainer)
 
@@ -79,19 +82,18 @@ class Program(QMainWindow):
         #self.layout.setColumnStretch(0,2)
 
         self.windowContainer.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        
 
+        self.contextBar = Contextbar(self)
+        self.windowContainer.addWidget(self.contextBar,0,0)
 
-
-        centerContainer = QWidget()
-        centerContainer.setParent(self.window)
-        centerContainer.setStyleSheet("background:green;border-radius:0px;")
+        centerContainer = QWidget(self.window)
+        centerContainer.setStyleSheet("background:rgb(200,200,200);border-radius:0px;")
         centerContainer.resize(QSize(800,600))
         centerContainer.setSizePolicy(QSizePolicy.Expanding,QSizePolicy.Expanding)
         centerContainerLayout = QGridLayout(centerContainer)
         centerContainerLayout.setContentsMargins(2,2,2,2)
         centerContainerLayout.setSpacing(5)
-        self.windowContainer.addWidget(centerContainer,0,0)
+        self.windowContainer.addWidget(centerContainer,1,0)
         self.windowContainer.setRowStretch(0,1)
         self.windowContainer.setColumnStretch(0,1)
 

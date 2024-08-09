@@ -3,7 +3,7 @@ from PySide6.QtGui import QCursor, QPainter, QPixmap
 from PySide6.QtWidgets import (QApplication, QGridLayout, QMainWindow,
                                QSizePolicy, QWidget)
 
-from GUI.Widgets.titlebar import Titlebar
+from GUI.Widgets.Titlebar import Titlebar
 from GUI.Widgets.WidgetUtils import drawPixelBorder, removePadding
 from Utils import *
 
@@ -174,14 +174,11 @@ class defaultWindow(QWidget):
         super().__init__(parent)
         self.parent = parent
         self.parent.titlebar = False
-        self.resize(QSize(800,600))
+        self.resize(self.parent.size())
         self.setSizePolicy(QSizePolicy.Expanding,QSizePolicy.Expanding)
         self.setObjectName("defaultWindow")
-        self.objectName
-        self.setContentsMargins(0,0,0,0)
 
-        self.layout = QGridLayout(self)
-        self.layout.setContentsMargins(0,0,0,0)
-        self.layout.setSpacing(0)
+        self.setLayout(QGridLayout())
+        removePadding(self)
 
         print("Default Window Enabled")
