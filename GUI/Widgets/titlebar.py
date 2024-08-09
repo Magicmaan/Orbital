@@ -1,6 +1,9 @@
 from PySide6.QtCore import QSize, Qt, QPoint
-from PySide6.QtGui import QIcon, QPixmap, QCursor
+from PySide6.QtGui import QIcon, QPixmap, QCursor, QPainter, QColor
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QSizePolicy, QSpacerItem, QWidget
+
+from GUI.Widgets.WidgetUtils import removePadding,drawPixelBorder
+
 
 class Titlebar(QWidget):
     def __init__(self, appWindow,parent=None):
@@ -17,21 +20,13 @@ class Titlebar(QWidget):
         self.resize(800, self.objheight)  # Adjusted size to fit the title bar
         
         self.setSizePolicy(QSizePolicy.Expanding,QSizePolicy.Fixed)
-        self.containerLayout = QHBoxLayout(self)
-        self.containerLayout.setObjectName("containerLayout")
-        self.containerLayout.setSpacing(0)
-        self.containerLayout.setContentsMargins(0,0,0,0)
+        self.setLayout(QHBoxLayout())
+        self.layout().setObjectName("containerLayout")
+        self.layout().setAlignment(Qt.AlignmentFlag.AlignLeft)
+        removePadding(self)
 
         self.setStyleSheet(
-            #titlebar background
-            "QWidget#Container{background-color: rgba(0, 255, 255, 255);"
-                  # Added border property
-            "background: purple}"
-
-            #buttons and labels
-            "QPushButton,QLabel {"
-            "background-color: transparent;"
-            "margin:0px;padding:0px;}"
+            "background: transparent;"
         )
 
 
@@ -39,34 +34,20 @@ class Titlebar(QWidget):
         self.setupUi()
     
     def setupUi(self):
-        self.inner = QWidget()
-        self.inner.setObjectName("Container")
-
-        self.layout = QHBoxLayout(self.inner)
-        self.layout.setSpacing(0)
-        
-        self.containerLayout.addWidget(self.inner)
-        self.inner.setContentsMargins(0,0,0,0)
-        self.layout.setContentsMargins(0,0,0,0)
-        
-        
-
-        
-        self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         self.icon = QLabel(self)
         self.icon.setObjectName("icon")
         self.icon.setPixmap(QPixmap("Resources/icons/icon.png").scaled(self.icon_size,self.icon_size, Qt.KeepAspectRatio, Qt.FastTransformation))
         self.icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.layout.addWidget(self.icon)
+        self.layout().addWidget(self.icon)
 
         self.title = QLabel(self)
         self.title.setText("Orb")
-        self.layout.addWidget(self.title)
+        self.layout().addWidget(self.title)
 
         #spacer
         self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-        self.layout.addItem(self.horizontalSpacer)
+        self.layout().addItem(self.horizontalSpacer)
 
         #minimise button
         self.minimiseBtn = self.addButton("MinimiseButton",self.appWindow.parent.showMinimized,"Resources/icons/minimise.png",self.icon_size)
@@ -74,11 +55,11 @@ class Titlebar(QWidget):
 
         #maximise button
         self.maximiseBtn = self.addButton("MaximiseButton",lambda:self.appWindow.parent.setWindowState(self.appWindow.parent.windowState() ^ Qt.WindowFullScreen),"Resources/icons/maximise.png",self.icon_size)
-        self.layout.addWidget(self.maximiseBtn)
+        self.layout().addWidget(self.maximiseBtn)
 
         #close app
         self.exitBtn = self.addButton("ExitButton",self.appWindow.parent.close,"Resources/icons/exit.png",self.icon_size)
-        self.layout.addWidget(self.exitBtn)
+        self.layout().addWidget(self.exitBtn)
 
     #helper function to add button to it in less code
     def addButton(self,name,func,icon,size) -> QPushButton:
@@ -94,6 +75,16 @@ class Titlebar(QWidget):
         #link button to function
         btn.clicked.connect(func)
 
-        self.layout.addWidget(btn)
+        self.layout().addWidget(btn)
 
         return btn
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        
+        # Fill the entire widget with a green color
+        # Draw edges from the pixmap
+        painter.fillRect(self.rect(),QColor(128,0,128))
+        
+        # End painting
+        painter.end()

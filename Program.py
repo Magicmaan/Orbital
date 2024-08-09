@@ -24,10 +24,11 @@ class pixelWidget(QWidget):
         
         # Fill the entire widget with a green color
         # Draw edges from the pixmap
-        drawPixelBorder(self,painter,QPixmap("Resources/button.png"),2,4)
+        drawPixelBorder(self,painter,QPixmap("Resources/button.png"))
         
         # End painting
-        painter.end()
+        #painter.end()
+        super().paintEvent(event)
 
 class Program(QMainWindow):
     def __init__(self, useCustomWindow=False,parent=None) -> None:
@@ -100,12 +101,8 @@ class Program(QMainWindow):
 
         leftBar = pixelWidget()
         leftBar.setFixedWidth(200)
-        
-        leftBar.setContentsMargins(0,0,0,0)
         leftBar.setSizePolicy(QSizePolicy.Fixed,QSizePolicy.Expanding)
-        leftBar.setStyleSheet("background:purple;")
-        lBarStyle = QVBoxLayout(leftBar)
-
+        leftBar.setLayout(QVBoxLayout())
         removePadding(leftBar)
 
         m = QLabel("Hi     ")
@@ -129,15 +126,15 @@ class Program(QMainWindow):
         
         
 
-        RightBar = QWidget()
+        RightBar = pixelWidget()
         RightBar.setFixedWidth(200)
-        RightBar.setContentsMargins(0,0,0,0)
         RightBar.setSizePolicy(QSizePolicy.Fixed,QSizePolicy.Expanding)
-        RightBar.setStyleSheet("background:blue;")
-        RBarStyle = QVBoxLayout(RightBar)
-        RBarStyle.addWidget(QLabel("Hi    "))
-        centerContainerLayout.addWidget(RightBar,1,2)
+        RightBar.setLayout(QVBoxLayout())
         removePadding(RightBar)
+
+        #   RightBar.layout().addWidget(QLabel("Hi    "))
+        centerContainerLayout.addWidget(RightBar,1,2)
+        
 
         cl = centerContainerLayout
         cl.setRowStretch(1,1)

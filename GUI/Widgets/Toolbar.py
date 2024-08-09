@@ -2,7 +2,7 @@ from PySide6.QtCore import QSize, Qt, QPoint, QRect
 from PySide6.QtGui import QIcon, QPixmap, QCursor, QPainter, QColor, QTransform
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QSizePolicy, QSpacerItem, QWidget
 
-from GUI.Widgets.WidgetUtils import *
+from GUI.Widgets.WidgetUtils import removePadding,drawPixelBorder
 
 class Toolbar(QWidget):
     def __init__(self, parent=None):
@@ -14,35 +14,21 @@ class Toolbar(QWidget):
         self.icon_size = 24
         self.resize(400, self.objheight)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.containerLayout = QHBoxLayout(self)
-        self.containerLayout.setObjectName("containerLayout")
+        self.setLayout(QHBoxLayout())
+        self.layout().setObjectName("containerLayout")
+        self.layout().setAlignment(Qt.AlignmentFlag.AlignLeft)
         removePadding(self)
 
         self.setStyleSheet(
             "background:transparent;"
-            "QPushButton, QLabel {"
-            "margin: 0px; padding: 0px; }"
         )
-
-
 
         self.setupUi()
 
     def setupUi(self):
-        self.inner = QWidget()
-        self.inner.setObjectName("Container")
-
-        self.layout = QHBoxLayout(self.inner)
-        self.layout.setSpacing(0)
-
-        self.containerLayout.addWidget(self.inner)
-        self.inner.setContentsMargins(0, 0, 0, 0)
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
-
         self.title = QLabel(self)
-        self.title.setText("        ")
-        self.layout.addWidget(self.title)
+        self.title.setText("Toolbar   ")
+        self.layout().addWidget(self.title)
 
         self.minimiseBtn = self.addButton("MinimiseButton", self.program.showMinimized, "Resources/icons/tools/brush.png", self.icon_size)
         self.minimiseBtn = self.addButton("MinimiseButton", self.program.showMinimized, "Resources/icons/tools/eraser.png", self.icon_size)
@@ -62,7 +48,7 @@ class Toolbar(QWidget):
         btn.setContentsMargins(0, 0, 0, 0)
         btn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         btn.clicked.connect(func)
-        self.layout.addWidget(btn)
+        self.layout().addWidget(btn)
         return btn
 
     
@@ -87,7 +73,7 @@ class Toolbar(QWidget):
         
         # Fill the entire widget with a green color
         # Draw edges from the pixmap
-        drawPixelBorder(self,painter,QPixmap("Resources/button.png"),2,4)
+        drawPixelBorder(self,painter,QPixmap("Resources/button.png"))
         
         # End painting
         painter.end()

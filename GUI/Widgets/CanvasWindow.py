@@ -119,7 +119,7 @@ class Viewport(QWidget):
 
         painter = QPainter(self)
 
-        drawPixelBorder(self,painter,QPixmap("Resources/button.png"),2,4)
+        drawPixelBorder(self,painter,QPixmap("Resources/button.png"))
 
         painter.drawPixmap(self.imagePosition.x(), self.imagePosition.y(), self.pixmap)
 

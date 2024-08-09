@@ -42,49 +42,51 @@ def removePadding(object):
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
 
-def drawPixelBorder(object, painter: QPainter,pmap,edgeSize=2,scale=4):
-        es = edgeSize  # Size of the edge sections
-        w,h = pmap.width(),pmap.height()
+def drawPixelBorder(object, painter: QPainter,pmap,edgeSize=2,scale=3):
+    
 
-        # Calculate the amount to shrink the rect
-        shrink = es * scale
-        
-        # Shrink the rect
-        shrunk_rect = object.rect().adjusted(
-            shrink, shrink, 
-            -shrink, -shrink
-        )
+    es = edgeSize  # Size of the edge sections
+    w,h = pmap.width(),pmap.height()
 
-        #fill in main colour
-        painter.fillRect(shrunk_rect, pmap.toImage().pixelColor(6, 6))  # Green color
+    # Calculate the amount to shrink the rect
+    shrink = es * scale
+    
+    # Shrink the rect
+    shrunk_rect = object.rect().adjusted(
+        shrink, shrink, 
+        -shrink, -shrink
+    )
 
-
-        #sides ----------------------------------------------------------------
-        top_cutout = QRect(es,0,w-es-1,2)
-        drawHorizontal(painter, pmap, top_cutout, 0, es, scale)
-
-        bot_cutout = QRect(es,h-es,w-es-1,h)
-        drawHorizontal(painter, pmap, bot_cutout, object.height()-shrink, es, scale)
-
-        left_cutout = QRect(0,es,es,h-es-1)
-        drawVertical(painter, pmap, left_cutout, 0, es, scale)
-
-        right_cutout = QRect(w-es,es,w,h-es-1)
-        drawVertical(painter, pmap, right_cutout, object.width()-shrink, es, scale)
+    #fill in main colour
+    painter.fillRect(shrunk_rect, pmap.toImage().pixelColor(6, 6))  # Green color
 
 
-        #corners ---------------------------------------------------------------
-        top_left_cutout, top_left_paste = QRect(0, 0, es, es), QPoint(0,0) # Top-left corner
-        drawCorner(painter, pmap, top_left_cutout, top_left_paste,scale) #top-Left
+    #sides ----------------------------------------------------------------
+    top_cutout = QRect(es,0,w-es-1,2)
+    drawHorizontal(painter, pmap, top_cutout, 0, es, scale)
 
-        bottom_left_cutout,bottom_left_paste = QRect(0, h-es, es, h), QPoint(0, object.height()-shrink)  # Bottom-left corner (adjust as needed)
-        drawCorner(painter, pmap, bottom_left_cutout, bottom_left_paste, scale)  # Draw bottom-left
+    bot_cutout = QRect(es,h-es,w-es-1,h)
+    drawHorizontal(painter, pmap, bot_cutout, object.height()-shrink, es, scale)
 
-        bottom_right_cutout,bottom_right_paste = QRect(w-es, h-es, w, h), QPoint(object.width()-shrink, object.height()-shrink)  # Bottom-left corner (adjust as needed)
-        drawCorner(painter, pmap, bottom_right_cutout, bottom_right_paste, scale)  # Draw bottom-right
+    left_cutout = QRect(0,es,es,h-es-1)
+    drawVertical(painter, pmap, left_cutout, 0, es, scale)
 
-        top_right_cutout,top_right_paste = QRect(w-es, 0, w, es), QPoint(object.width()-shrink, 0)  # Bottom-left corner (adjust as needed)
-        drawCorner(painter, pmap, top_right_cutout, top_right_paste, scale)  # Draw top-right
+    right_cutout = QRect(w-es,es,w,h-es-1)
+    drawVertical(painter, pmap, right_cutout, object.width()-shrink, es, scale)
+
+
+    #corners ---------------------------------------------------------------
+    top_left_cutout, top_left_paste = QRect(0, 0, es, es), QPoint(0,0) # Top-left corner
+    drawCorner(painter, pmap, top_left_cutout, top_left_paste,scale) #top-Left
+
+    bottom_left_cutout,bottom_left_paste = QRect(0, h-es, es, h), QPoint(0, object.height()-shrink)  # Bottom-left corner (adjust as needed)
+    drawCorner(painter, pmap, bottom_left_cutout, bottom_left_paste, scale)  # Draw bottom-left
+
+    bottom_right_cutout,bottom_right_paste = QRect(w-es, h-es, w, h), QPoint(object.width()-shrink, object.height()-shrink)  # Bottom-left corner (adjust as needed)
+    drawCorner(painter, pmap, bottom_right_cutout, bottom_right_paste, scale)  # Draw bottom-right
+
+    top_right_cutout,top_right_paste = QRect(w-es, 0, w, es), QPoint(object.width()-shrink, 0)  # Bottom-left corner (adjust as needed)
+    drawCorner(painter, pmap, top_right_cutout, top_right_paste, scale)  # Draw top-right
 
 
         
