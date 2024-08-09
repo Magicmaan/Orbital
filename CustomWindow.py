@@ -8,6 +8,7 @@ from PySide6.QtWidgets import QWidget
 from GUI.Widgets.titlebar import Titlebar
 
 from Utils import *
+from GUI.Widgets.WidgetUtils import removePadding
 
 class MouseEventFilter(QObject):
     def __init__(self, custom_window):
@@ -33,17 +34,18 @@ class customWindow(QWidget):
         self.parent = parent
         self.parent.setWindowFlags(Qt.FramelessWindowHint)
         self.parent.setAttribute(Qt.WA_TranslucentBackground)  # Disable default border
-        self.parent.appContainer.setContentsMargins(2, 6, 2, 2)  # Add border
+        
         self.parent.appContainer.setStyleSheet("background:red;border-radius:0px;")
 
         self.resize(self.parent.size())
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setObjectName("customWindow")
 
-        self.setContentsMargins(0, 0, 0, 0)
-        self.layout = QGridLayout(self)
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.layout.setSpacing(0)
+        self.setLayout(QGridLayout())
+        removePadding(self)
+
+        self.parent.appContainer.setContentsMargins(2, 6, 2, 2)  # Add border
+
         self.customTitleBar()
 
         # Variables for resizing

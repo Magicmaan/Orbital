@@ -4,8 +4,9 @@ from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 from PySide6.QtWidgets import QWidget
 
-from GUI.Widgets.Programbar import Programbar   
+ 
 from GUI.Widgets.CanvasWindow import Viewport
+from GUI.Widgets.WidgetUtils import removePadding,drawPixelBorder
 from GUI.Widgets.Toolbar import Toolbar
 
 from Utils import *
@@ -14,8 +15,19 @@ from DiscordPresence import *
 from CustomWindow import customWindow,defaultWindow
         
 
-
-
+class pixelWidget(QWidget):
+    def __init__(self, parent=None) -> None:
+        super().__init__(parent)
+    
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        
+        # Fill the entire widget with a green color
+        # Draw edges from the pixmap
+        drawPixelBorder(self,painter,QPixmap("Resources/button.png"),2,4)
+        
+        # End painting
+        painter.end()
 
 class Program(QMainWindow):
     def __init__(self, useCustomWindow=False,parent=None) -> None:
@@ -31,7 +43,7 @@ class Program(QMainWindow):
         self.setMinimumSize(self.minSize)  # Minimum size for the window
         self.appIcon = QIcon("Resources/icons/icon.png")
         self.app.setWindowIcon(self.appIcon)
-        self.setContentsMargins(0,0,0,0)
+        removePadding(self)
         
         #set custom font
         font_Path = "Resources/fonts/minecraft_font.ttf"
@@ -47,24 +59,20 @@ class Program(QMainWindow):
         
 
         
-        
-       
-        
         self.layout = QVBoxLayout(self.appContainer)
         self.layout.setSpacing(0)
-        self.layout.setContentsMargins(0,0,0,0)
         self.layout.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         
+        removePadding(self.appContainer)
 
         #self.layout.addStretch()  # To fill the remaining space if needed
         # Custom Frame 
         if useCustomWindow:
             self.window = customWindow(self)
-            self.windowContainer = self.window.layout
-            
+            self.windowContainer = self.window.layout()
         else:
             self.window = defaultWindow(self)
-            self.windowContainer = self.window.layout
+            self.windowContainer = self.window.layout()
 
         
         self.window.resize(self.size())
@@ -90,14 +98,18 @@ class Program(QMainWindow):
         self.windowContainer.setRowStretch(0,1)
         self.windowContainer.setColumnStretch(0,1)
 
-        leftBar = QWidget()
+        leftBar = pixelWidget()
         leftBar.setFixedWidth(200)
+        
         leftBar.setContentsMargins(0,0,0,0)
         leftBar.setSizePolicy(QSizePolicy.Fixed,QSizePolicy.Expanding)
         leftBar.setStyleSheet("background:purple;")
         lBarStyle = QVBoxLayout(leftBar)
+
+        removePadding(leftBar)
+
         m = QLabel("Hi     ")
-        m.setContentsMargins(0,0,0,0)
+        removePadding(m)
         m.setStyleSheet("background: purple;border: 5px solid red")
         #lBarStyle.addWidget(m)
         centerContainerLayout.addWidget(m,0,0)
@@ -125,6 +137,7 @@ class Program(QMainWindow):
         RBarStyle = QVBoxLayout(RightBar)
         RBarStyle.addWidget(QLabel("Hi    "))
         centerContainerLayout.addWidget(RightBar,1,2)
+        removePadding(RightBar)
 
         cl = centerContainerLayout
         cl.setRowStretch(1,1)

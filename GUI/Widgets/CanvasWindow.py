@@ -8,9 +8,8 @@ from os.path import exists
 
 
 
-import CanvasUtils
 from DialogBox import ErrorDialog,SuccessDialog
-from CanvasUtils import *
+from GUI.Widgets.WidgetUtils import *
 
 DEFAULT_IMG = "Resources/default_canvas.png"
 
@@ -115,9 +114,10 @@ class Viewport(QWidget):
     def paintEvent(self, event):
 
         painter = QPainter(self)
-        # Scale the fixed-size pixmap to fit the widget's size using nearest neighbor scaling
-        scaled_pixmap = self.pixmap#.scaled(self.size(), Qt.KeepAspectRatioByExpanding, Qt.FastTransformation)
-        painter.drawPixmap(self.imagePosition.x(), self.imagePosition.y(), scaled_pixmap)
+
+        drawPixelBorder(self,painter,QPixmap("Resources/button.png"),2,4)
+        
+        painter.drawPixmap(self.imagePosition.x(), self.imagePosition.y(), self.pixmap)
 
 
     def mousePressEvent(self, event):
