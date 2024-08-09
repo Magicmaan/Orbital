@@ -33,7 +33,7 @@ class customWindow(QWidget):
         self.parent = parent
         self.parent.setWindowFlags(Qt.FramelessWindowHint)
         self.parent.setAttribute(Qt.WA_TranslucentBackground)  # Disable default border
-        self.parent.appContainer.setContentsMargins(2, 2, 2, 2)  # Add border
+        self.parent.appContainer.setContentsMargins(2, 6, 2, 2)  # Add border
         self.parent.appContainer.setStyleSheet("background:red;border-radius:0px;")
 
         self.resize(self.parent.size())
@@ -65,29 +65,58 @@ class customWindow(QWidget):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
-            self.dragging_pos = event.globalPos()
+            self.mouseoffset = self.parent.mapFromGlobal(event.globalPos())
             self.dragging = True
 
     def mouseMoveEvent(self, event):
-        pos = self.parent.mapFromGlobal(event.globalPos())
+        
+        
+        #if self.dragging: #check if holding down mouse to resize
+            
+
+            #return
+
+        tbar = self.parent.titlebar
+        pos = tbar.mapFromGlobal(event.globalPos())
         sideHit = self.detectEdge(pos)
-        if self.dragging: #check if holding down mouse
-            if sideHit[1] or self.lastResize==1:
-                self.parent.setFixedWidth(pos.x())
-                self.lastResize = 1
-            elif sideHit[0] or self.lastResize==0:
-                self.parent.setFixedWidth(self.parent.width() - (event.globalPos().x() - self.parent.pos().x()))
+
+        if tbar.rect().contains(pos) and self.dragging and self.lastResize == (-1) :
+            self.customDrag(event)
+            
+        elif self.dragging:
+            self.customResize(event,sideHit)
+        
+    def customResize(self,event,sideHit):
+        self.updateCursor(sideHit)
+        pos = self.parent.mapFromGlobal(event.globalPos())
+        if sideHit[1] or self.lastResize==1: # Right side resize
+            self.parent.setFixedWidth(max(pos.x(),self.parent.minSize.width()))
+            self.lastResize = 1
+        elif sideHit[0] or self.lastResize==0: # Left Side resize
+            resizeTo = max(self.parent.width() - (event.globalPos().x() - self.parent.pos().x()),self.parent.minSize.width())
+            if resizeTo != self.parent.minSize.width():
+                self.parent.setFixedWidth(resizeTo)
                 self.parent.move(event.globalPos().x() ,self.parent.pos().y())
                 self.lastResize = 0
-            if sideHit[3] or self.lastResize==3:
-                self.parent.setFixedHeight(pos.y())
-                self.lastResize = 3
-            elif sideHit[2] or self.lastResize==2:  # Assuming sideHit[2] now indicates a hit on the top side
-                self.parent.setFixedHeight(self.parent.height() - (event.globalPos().y() - self.parent.pos().y()))
+
+        if sideHit[3] or self.lastResize==3: # Bottom side resize
+            self.parent.setFixedHeight(max(pos.y(),self.parent.minSize.height()))
+            self.lastResize = 3
+
+        elif sideHit[2] or self.lastResize==2:  # Top side resize
+            resizeTo = max(self.parent.height() - (event.globalPos().y() - self.parent.pos().y()),self.parent.minSize.height())
+            print(resizeTo)
+            if resizeTo != self.parent.minSize.height():
+                self.parent.setFixedHeight(resizeTo)
                 self.parent.move(self.parent.pos().x(), event.globalPos().y())
                 self.lastResize = 2
 
-        self.updateCursor(sideHit)
+
+    def customDrag(self,event):
+        windowPos = self.parent.pos()
+        self.parent.move(event.globalPos() - self.mouseoffset)
+
+        self.lastResize = -1
 
     def mouseReleaseEvent(self, event):
         self.dragging = False
@@ -117,10 +146,6 @@ class customWindow(QWidget):
 
         if sideHit[2] or sideHit[3]:
             cursor.setShape(Qt.SizeVerCursor)
-
-        
-        
-        
 
         self.setCursor(cursor)
 

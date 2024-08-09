@@ -97,20 +97,3 @@ class Titlebar(QWidget):
         self.layout.addWidget(btn)
 
         return btn
-    
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self.mouse_pressed = True
-            cpos = QCursor.pos()
-            self.mouse_offset = self.appWindow.parent.mapFromGlobal(cpos)
-
-
-    def mouseReleaseEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self.mouse_pressed = False
-    
-    def mouseMoveEvent(self, event):
-        if self.mouse_pressed:
-            # Optionally handle mouse movement while holding    
-            pos = self.appWindow.parent.pos()
-            self.appWindow.parent.move(pos + event.position().toPoint() - self.mouse_offset)

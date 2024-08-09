@@ -23,21 +23,19 @@ class Program(QMainWindow):
         
         self.app = QApplication.instance()
         self.setMouseTracking(True)
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
 
+        self.minSize = QSize(650,650)
         #setup window
         self.setWindowTitle("Orb")
-        self.setMinimumSize(805, 605)  # Minimum size for the window
+        self.setMinimumSize(self.minSize)  # Minimum size for the window
         self.appIcon = QIcon("Resources/icons/icon.png")
         self.app.setWindowIcon(self.appIcon)
         self.setContentsMargins(0,0,0,0)
-
         
         #set custom font
         font_Path = "Resources/fonts/minecraft_font.ttf"
         self.setCustFont(font_Path,8)
-    
-
         #Head container for app
         self.appContainer = QWidget(self)
         # Set the central widget for the MainWindow
