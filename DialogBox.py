@@ -1,6 +1,7 @@
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import *
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import (QDialog, QDialogButtonBox, QLabel, QVBoxLayout,
+                               QWidget)
+
 
 class FileSelector(QDialog):
     def __init__(self) -> None:

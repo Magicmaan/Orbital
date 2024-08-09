@@ -1,7 +1,7 @@
-from PySide6.QtCore import *
-from PySide6.QtGui import QFont, QFontDatabase
-from PySide6.QtWidgets import *
 import sys
+
+from PySide6.QtGui import QFont, QFontDatabase
+
 
 #add font from string to application
 #returns fontID 

@@ -1,15 +1,13 @@
 
-from PySide6.QtCore import *
-from PySide6.QtGui import *
-from PySide6.QtWidgets import *
 import sys
 from os.path import exists
 
+from PySide6.QtCore import QPoint, QRect, QSize, Qt
+from PySide6.QtGui import QPainter, QPixmap, QWheelEvent
+from PySide6.QtWidgets import QLabel, QSizePolicy, QVBoxLayout, QWidget
 
-
-
-from DialogBox import ErrorDialog,SuccessDialog
-from GUI.Widgets.WidgetUtils import removePadding,drawPixelBorder
+from DialogBox import ErrorDialog, SuccessDialog
+from GUI.Widgets.WidgetUtils import drawPixelBorder, removePadding
 
 DEFAULT_IMG = "Resources/default_canvas.png"
 

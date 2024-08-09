@@ -1,8 +1,10 @@
-from PySide6.QtCore import QSize, Qt, QPoint, QRect
-from PySide6.QtGui import QIcon, QPixmap, QCursor, QPainter, QColor, QTransform
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QSizePolicy, QSpacerItem, QWidget
+from PySide6.QtCore import QSize, Qt
+from PySide6.QtGui import QCursor, QIcon, QPainter, QPixmap, QTransform
+from PySide6.QtWidgets import (QHBoxLayout, QLabel, QPushButton, QSizePolicy,
+                               QWidget)
 
-from GUI.Widgets.WidgetUtils import removePadding,drawPixelBorder
+from GUI.Widgets.WidgetUtils import drawPixelBorder, removePadding
+
 
 class Toolbar(QWidget):
     def __init__(self, parent=None):

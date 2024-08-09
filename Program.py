@@ -1,19 +1,15 @@
-from PySide6.QtCore import *
-from PySide6.QtCore import Qt
-from PySide6.QtGui import *
-from PySide6.QtWidgets import *
-from PySide6.QtWidgets import QWidget
+from PySide6.QtCore import QSize, Qt
+from PySide6.QtGui import QFontDatabase, QIcon, QPainter, QPixmap
+from PySide6.QtWidgets import (QApplication, QGridLayout, QLabel, QMainWindow,
+                               QSizePolicy, QVBoxLayout, QWidget)
 
- 
-from GUI.Widgets.CanvasWindow import Viewport
-from GUI.Widgets.WidgetUtils import removePadding,drawPixelBorder
-from GUI.Widgets.Toolbar import Toolbar
-
-from Utils import *
+from CustomWindow import customWindow, defaultWindow
 from DiscordPresence import *
+from GUI.Widgets.CanvasWindow import Viewport
+from GUI.Widgets.Toolbar import Toolbar
+from GUI.Widgets.WidgetUtils import drawPixelBorder, removePadding
+from Utils import getFont
 
-from CustomWindow import customWindow,defaultWindow
-        
 
 class pixelWidget(QWidget):
     def __init__(self, parent=None) -> None:

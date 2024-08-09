@@ -1,10 +1,11 @@
-from PySide6.QtCore import *
-from PySide6.QtGui import *
-from PySide6.QtWidgets import *
 import sys
 from os.path import exists
-from DialogBox import ErrorDialog,SuccessDialog
 from typing import Type
+
+from PySide6.QtCore import QPoint, QRect, Qt
+from PySide6.QtGui import QPainter, QPixmap, QTransform
+
+from DialogBox import ErrorDialog, SuccessDialog
 
 IMPORT_TYPES = ("PNG", "JPEG", "BMP")
 EXPORT_TYPES = ("PNG","JPEG","BMP")

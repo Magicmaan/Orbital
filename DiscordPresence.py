@@ -1,5 +1,6 @@
-from discordrp import Presence
 import time
+
+from discordrp import Presence
 
 client_id = "1270540390088441928"  # Replace this with your own client id
 

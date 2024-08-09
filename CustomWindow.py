@@ -1,14 +1,12 @@
-from PySide6.QtCore import *
-from PySide6.QtCore import Qt
-from PySide6.QtGui import *
-from PySide6.QtWidgets import *
-from PySide6.QtWidgets import QWidget
-
+from PySide6.QtCore import QEvent, QObject, QPoint, QSize, Qt
+from PySide6.QtGui import QCursor
+from PySide6.QtWidgets import (QApplication, QGridLayout, QMainWindow,
+                               QSizePolicy, QWidget)
 
 from GUI.Widgets.titlebar import Titlebar
-
-from Utils import *
 from GUI.Widgets.WidgetUtils import removePadding
+from Utils import *
+
 
 class MouseEventFilter(QObject):
     def __init__(self, custom_window):

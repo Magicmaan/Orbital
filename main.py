@@ -1,13 +1,9 @@
-from PySide6.QtCore import *
-from PySide6.QtGui import *
-from PySide6.QtWidgets import *
 import sys
 
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import QApplication
 
 from Program import Program
-
-    
-
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

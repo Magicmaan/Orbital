@@ -1,8 +1,8 @@
-from PySide6.QtCore import *
-from PySide6.QtGui import *
-from PySide6.QtWidgets import *
+from PySide6.QtGui import QAction, QColor
+from PySide6.QtWidgets import QMenu
 
 from Resources.external.Neomorphism import *
+
 
 def NewFile():
     print("New File!!")
