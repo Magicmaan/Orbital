@@ -1,6 +1,6 @@
 from functools import wraps
 from PySide6.QtCore import QEvent, QObject, QPoint, QSize, Qt
-from PySide6.QtGui import QPainter, QPixmap, QPainter
+from PySide6.QtGui import QPainter, QPixmap, QPainter, QColor, QBitmap
 from PySide6.QtWidgets import (QApplication, QGridLayout, QMainWindow,
                                QSizePolicy, QWidget)
 
@@ -24,7 +24,7 @@ def PixelBorder(cls):
 
         painter = QPainter(pmap)
 
-        drawPixelBorder(pmap, painter,QPixmap(self.pixelBorderPath))
+        drawPixelBorder(pmap, painter,QPixmap(self.pixelBorderPath),3)
 
         self._pixelBorderCache = pmap
 
@@ -34,9 +34,10 @@ def PixelBorder(cls):
         if not self._pixelBorderCache:
             self._generatePixelBorder()
 
-        #draw the buffer
-        painter.drawPixmap( QPoint(0,0), self._pixelBorderCache )
-        #drawPixelBorder(self,painter,QPixmap(self.PixelBorderPath))
+        # Draw the pixmap using the mask
+        painter.drawPixmap(QPoint(0, 0), self._pixelBorderCache)
+
+
         # Call the original paintEvent
         original_paint_event(self, event)
 

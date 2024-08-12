@@ -1,13 +1,13 @@
 from PySide6.QtCore import QEvent, QObject, QPoint, QSize, Qt
 from PySide6.QtGui import QCursor, QPainter, QPixmap
 from PySide6.QtWidgets import (QApplication, QGridLayout, QMainWindow,
-                               QSizePolicy, QWidget)
+                               QSizePolicy, QWidget, QVBoxLayout)
 
 from GUI.Widgets.Titlebar import Titlebar
 from GUI.Widgets.WidgetUtils import drawPixelBorder, removePadding
 from Utils import *
 
-from GUI.Widgets.Decorators import PixelBorder, sizePolicy
+from GUI.Decorators import PixelBorder, sizePolicy
 
 class MouseEventFilter(QObject):
     def __init__(self, custom_window):
@@ -29,25 +29,37 @@ class MouseEventFilter(QObject):
 
 
 @PixelBorder
-
 class customWindow(QWidget):
     def __init__(self, parent: QMainWindow):
         super().__init__(parent)
         self.parent = parent
-        self.parent.setWindowFlags(Qt.FramelessWindowHint)
-        self.parent.setAttribute(Qt.WA_TranslucentBackground)  # Disable default border
-        
-        self.parent.appContainer.setStyleSheet("background:red;border-radius:0px;")
+        #setup widget
+        self.setObjectName("customWindow")
         self.resize(self.parent.size())
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.setObjectName("customWindow")
-        
-        self.setLayout(QGridLayout())
+        self.setLayout(QVBoxLayout())
+        self.layout().setAlignment(Qt.AlignmentFlag.AlignCenter)
         removePadding(self)
+        self.setContentsMargins(6,6,6,6)  # Add border
 
-        self.parent.appContainer.setContentsMargins(4,6,4,4)  # Add border
+        # Install the global event filter
+        self.mouse_event_filter = MouseEventFilter(self)
+        QApplication.instance().installEventFilter(self.mouse_event_filter)
+
+        
+        #setup custom border
+        
+        self.parent.setWindowFlags(Qt.FramelessWindowHint)
+        self.parent.setAttribute(Qt.WA_TranslucentBackground)  
+        self.pixelBorderPath = "Resources/coloured.png"
+
+        # Set the central widget for the MainWindow
+        self.parent.setCentralWidget(self)
+        
 
         self.customTitleBar()
+
+        
 
         # Variables for resizing
         self.dragging = False
@@ -57,14 +69,12 @@ class customWindow(QWidget):
 
         print("Custom Window Enabled")
 
-        # Install the global event filter
-        self.mouse_event_filter = MouseEventFilter(self)
-        QApplication.instance().installEventFilter(self.mouse_event_filter)
+        
 
     def customTitleBar(self):
         # Titlebar init
-        self.parent.titlebar = Titlebar(self)
-        self.parent.layout.addWidget(self.parent.titlebar)
+        self.titlebar = Titlebar(self)
+        self.layout().addWidget(self.titlebar)
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
@@ -72,25 +82,20 @@ class customWindow(QWidget):
             self.dragging = True
 
     def mouseMoveEvent(self, event):
-        
-        
-        #if self.dragging: #check if holding down mouse to resize
-            
-
-            #return
-
-        tbar = self.parent.titlebar
+        tbar = self.titlebar
         pos = tbar.mapFromGlobal(event.globalPos())
-        sideHit = self.detectEdge(pos)
+        sideHit = self._detectEdge(pos)
 
         if tbar.rect().contains(pos) and self.dragging and self.lastResize == (-1) :
-            self.customDrag(event)
+            self.customDrag(event,sideHit)
             
         elif self.dragging:
             self.customResize(event,sideHit)
         
     def customResize(self,event,sideHit):
-        self.updateCursor(sideHit)
+
+        self._updateCursor(sideHit)
+
         pos = self.parent.mapFromGlobal(event.globalPos())
         if sideHit[1] or self.lastResize==1: # Right side resize
             self.parent.setFixedWidth(max(pos.x(),self.parent.minSize.width()))
@@ -115,7 +120,10 @@ class customWindow(QWidget):
                 self.lastResize = 2
 
 
-    def customDrag(self,event):
+    def customDrag(self,event,sideHit):
+
+        self._updateCursor(sideHit)
+
         windowPos = self.parent.pos()
         self.parent.move(event.globalPos() - self.mouseoffset)
 
@@ -125,7 +133,7 @@ class customWindow(QWidget):
         self.dragging = False
         self.lastResize = -1
 
-    def detectEdge(self,pos):
+    def _detectEdge(self,pos):
         Left,Right,Top,Bot = False,False,False,False
         #edge detection for resize app
         if pos.x() <= self.resize_edge_size: #left edge
@@ -139,10 +147,10 @@ class customWindow(QWidget):
 
         return Left,Right,Top,Bot
     
-    def updateCursor(self, sideHit):
-        
+    def _updateCursor(self, sideHit):
         # Determine the position relative to the window
         cursor = QCursor()
+        cursor.setShape(Qt.CursorShape.CrossCursor)
 
         if sideHit[0] or sideHit[1]:
             cursor.setShape(Qt.SizeHorCursor)

@@ -31,7 +31,9 @@ class pixelWidget(QWidget):
 class Program(QMainWindow):
     def __init__(self, useCustomWindow=False,parent=None) -> None:
         super().__init__(parent)
-        
+        #create reference accessible from program
+        QApplication.instance().program = self
+
         self.app = QApplication.instance()
         self.setMouseTracking(True)
         self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
@@ -47,26 +49,23 @@ class Program(QMainWindow):
         #set custom font
         font_Path = "Resources/fonts/minecraft_font.ttf"
         self.setCustFont(font_Path,8)
-        #Head container for app
-        self.appContainer = pixelWidget(self)
-        self.appContainer.border = "Resources/coloured.png"
-        # Set the central widget for the MainWindow
-        self.setCentralWidget(self.appContainer)
 
-        self.appContainer.setObjectName("appContainer")
-        self.appContainer.resize(800,600)
-        self.appContainer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
         
 
         
-        self.layout = QVBoxLayout(self.appContainer)
-        self.layout.setSpacing(0)
-        self.layout.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        
-        removePadding(self.appContainer)
 
+        
+        
+        self.setLayout(QVBoxLayout())
+        self.layout().setContentsMargins(0,0,0,0)
+        self.layout().setSpacing(0)
+
+
+        #self.layout().addWidget(self.appContainer)
         #self.layout.addStretch()  # To fill the remaining space if needed
         # Custom Frame 
+
         if useCustomWindow:
             self.window = customWindow(self)
             self.windowContainer = self.window.layout()
@@ -74,17 +73,9 @@ class Program(QMainWindow):
             self.window = defaultWindow(self)
             self.windowContainer = self.window.layout()
 
-        
-        self.window.resize(self.size())
-        self.window.setStyleSheet("background:blue;border-radius:0px;")
-        self.layout.addWidget(self.window)
-        #self.layout.setRowStretch(0,2)
-        #self.layout.setColumnStretch(0,2)
 
-        self.windowContainer.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.contextBar = Contextbar(self)
-        self.windowContainer.addWidget(self.contextBar,0,0)
+        self.contextBar = Contextbar()
+        self.windowContainer.addWidget(self.contextBar)
 
         centerContainer = QWidget(self.window)
         centerContainer.setStyleSheet("background:rgb(200,200,200);border-radius:0px;")
@@ -93,10 +84,10 @@ class Program(QMainWindow):
         centerContainerLayout = QGridLayout(centerContainer)
         centerContainerLayout.setContentsMargins(2,2,2,2)
         centerContainerLayout.setSpacing(5)
-        self.windowContainer.addWidget(centerContainer,1,0)
-        self.windowContainer.setRowStretch(0,1)
-        self.windowContainer.setColumnStretch(0,1)
-
+        self.windowContainer.addWidget(centerContainer)
+        #self.windowContainer.setRowStretch(0,1)
+        #self.windowContainer.setColumnStretch(0,1)
+        
         leftBar = pixelWidget()
         leftBar.setFixedWidth(200)
         leftBar.setSizePolicy(QSizePolicy.Fixed,QSizePolicy.Expanding)
@@ -105,9 +96,7 @@ class Program(QMainWindow):
 
        
         centerContainerLayout.addWidget(leftBar,1,0)
-
-
-        centerContainerLayout.addWidget(Toolbar(self),0,1)
+        centerContainerLayout.addWidget(Toolbar(),0,1)
         
         
         #Create and configure the Canvas widget
@@ -121,7 +110,7 @@ class Program(QMainWindow):
         
 
         RightBar = pixelWidget()
-        RightBar.setFixedWidth(200)
+        RightBar.setFixedWidth(25)
         RightBar.setSizePolicy(QSizePolicy.Fixed,QSizePolicy.Expanding)
         RightBar.setLayout(QVBoxLayout())
         removePadding(RightBar)
@@ -134,27 +123,36 @@ class Program(QMainWindow):
         cl.setRowStretch(1,1)
         cl.setColumnStretch(1,1)
 
+        cl.setRowStretch(0,1)
+        cl.setColumnStretch(1,1)
+
         
 
         print("Program Started")
 
-    
+    def setupGUI(self):
+        #self = actual program
+        self.setLayout(QVBoxLayout())
+        removePadding(self)
+
+        
+        # Custom Frame 
+        #create custom frame for window,
+        if self.isCustomWindow():
+            self.window = customWindow(self)
+            self.windowContainer = self.window.layout()
+        else:
+            self.window = defaultWindow(self)
+            self.windowContainer = self.window.layout()
+
+        
+        pass
 
     def isCustomWindow(self) -> bool:
         if self.window.objectName() == "customWindow":
             return True
         else:
             return False
-         
-    def resizeEvent(self, event):
-        # Call the base class implementation
-        super().resizeEvent(event)
-
-        # Custom handling code here
-        print(f"Window resized to: {event.size().width()}x{event.size().height()}")
-
-        # Example: Update widget appearance based on the new size
-        self.update()  # Request a repaint if necessary
 
     def setCustFont(self,fontPath,size) -> bool:
         #add font to application 

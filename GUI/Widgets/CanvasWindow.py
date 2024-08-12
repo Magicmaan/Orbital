@@ -33,14 +33,14 @@ class Image(QWidget):
         else:
             return False
     
-from GUI.Widgets.Decorators import PixelBorder, sizePolicy
+from GUI.Decorators import PixelBorder, sizePolicy
 
 @PixelBorder
 
 class Viewport(QWidget):
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
-
+        
         sX, sY = 128, 128
         self.fixed_size = QSize(sX, sY)
 

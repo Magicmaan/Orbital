@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QApplication, QWidget, QSizePolicy
 from PySide6.QtGui import QPainter, QColor, QPixmap
 from PySide6.QtCore import Qt
 
-from GUI.Widgets.Decorators import PixelBorder, sizePolicy
+from GUI.Decorators import PixelBorder, sizePolicy
 
 
 class RGBSpectrumWidget(QWidget):

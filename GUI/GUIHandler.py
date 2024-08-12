@@ -12,7 +12,7 @@ from GUI.Widgets.WidgetUtils import removePadding
 from GUI.Widgets.ColourPicker import RGBSpectrumWidget
 from Utils import getFont
 
-from GUI.Widgets.Decorators import PixelBorder,sizePolicy
+from GUI.Decorators import PixelBorder,sizePolicy
 
 @PixelBorder
 class pixelWidget(QWidget):

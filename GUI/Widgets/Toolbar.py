@@ -1,11 +1,11 @@
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QCursor, QIcon, QPainter, QPixmap, QTransform
 from PySide6.QtWidgets import (QHBoxLayout, QLabel, QPushButton, QSizePolicy,
-                               QWidget)
+                               QWidget, QApplication)
 
 from GUI.Widgets.WidgetUtils import drawPixelBorder, removePadding
 
-from GUI.Widgets.Decorators import PixelBorder, sizePolicy
+from GUI.Decorators import PixelBorder, sizePolicy
 
 @PixelBorder
 
@@ -14,10 +14,10 @@ class Toolbar(QWidget):
         super().__init__(parent)
         self.setObjectName("ToolBar")
 
-        self.program = parent
-        self.objheight = 16
+        self.program = QApplication.instance().program
+
+        self.objheight = 36
         self.icon_size = 24
-        self.resize(400, self.objheight)
         self.setFixedHeight(self.objheight)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.setLayout(QHBoxLayout())
