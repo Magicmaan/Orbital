@@ -5,6 +5,9 @@ from PySide6.QtWidgets import (QHBoxLayout, QLabel, QPushButton, QSizePolicy,
 
 from GUI.Widgets.WidgetUtils import drawPixelBorder, removePadding
 
+from GUI.Widgets.Decorators import PixelBorder, sizePolicy
+
+@PixelBorder
 
 class Toolbar(QWidget):
     def __init__(self, parent=None):
@@ -15,6 +18,7 @@ class Toolbar(QWidget):
         self.objheight = 16
         self.icon_size = 24
         self.resize(400, self.objheight)
+        self.setFixedHeight(self.objheight)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.setLayout(QHBoxLayout())
         self.layout().setObjectName("containerLayout")
@@ -70,15 +74,6 @@ class Toolbar(QWidget):
             pos = self.program.pos()
             self.program.move(pos + event.position().toPoint() - self.mouse_offset)
 
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        
-        # Fill the entire widget with a green color
-        # Draw edges from the pixmap
-        drawPixelBorder(self,painter,QPixmap("Resources/button.png"))
-        
-        # End painting
-        painter.end()
         
     
         

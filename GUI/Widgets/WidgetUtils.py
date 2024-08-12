@@ -11,8 +11,6 @@ IMPORT_TYPES = ("PNG", "JPEG", "BMP")
 EXPORT_TYPES = ("PNG","JPEG","BMP")
 
 def exportTexture(image,path:str,format:str="png",) -> bool:
-        
-        
         imageTexture = image.image
         if exists(path):
             if not imageTexture.isNull():
@@ -43,9 +41,7 @@ def removePadding(object):
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
 
-def drawPixelBorder(object, painter: QPainter,pmap,edgeSize=2,scale=3):
-    
-
+def drawPixelBorder(object, painter: QPainter,pmap,edgeSize=2,scale=2):
     es = edgeSize  # Size of the edge sections
     w,h = pmap.width(),pmap.height()
 
@@ -60,39 +56,35 @@ def drawPixelBorder(object, painter: QPainter,pmap,edgeSize=2,scale=3):
 
     #fill in main colour
     painter.fillRect(shrunk_rect, pmap.toImage().pixelColor(6, 6))  # Green color
-
-
     #sides ----------------------------------------------------------------
     top_cutout = QRect(es,0,w-es-1,2)
-    drawHorizontal(painter, pmap, top_cutout, 0, es, scale)
+    _drawHorizontal(painter, pmap, top_cutout, 0, es, scale)
 
     bot_cutout = QRect(es,h-es,w-es-1,h)
-    drawHorizontal(painter, pmap, bot_cutout, object.height()-shrink, es, scale)
+    _drawHorizontal(painter, pmap, bot_cutout, object.height()-shrink, es, scale)
 
     left_cutout = QRect(0,es,es,h-es-1)
-    drawVertical(painter, pmap, left_cutout, 0, es, scale)
+    _drawVertical(painter, pmap, left_cutout, 0, es, scale)
 
     right_cutout = QRect(w-es,es,w,h-es-1)
-    drawVertical(painter, pmap, right_cutout, object.width()-shrink, es, scale)
+    _drawVertical(painter, pmap, right_cutout, object.width()-shrink, es, scale)
 
 
     #corners ---------------------------------------------------------------
     top_left_cutout, top_left_paste = QRect(0, 0, es, es), QPoint(0,0) # Top-left corner
-    drawCorner(painter, pmap, top_left_cutout, top_left_paste,scale) #top-Left
+    _drawCorner(painter, pmap, top_left_cutout, top_left_paste,scale) #top-Left
 
     bottom_left_cutout,bottom_left_paste = QRect(0, h-es, es, h), QPoint(0, object.height()-shrink)  # Bottom-left corner (adjust as needed)
-    drawCorner(painter, pmap, bottom_left_cutout, bottom_left_paste, scale)  # Draw bottom-left
+    _drawCorner(painter, pmap, bottom_left_cutout, bottom_left_paste, scale)  # Draw bottom-left
 
     bottom_right_cutout,bottom_right_paste = QRect(w-es, h-es, w, h), QPoint(object.width()-shrink, object.height()-shrink)  # Bottom-left corner (adjust as needed)
-    drawCorner(painter, pmap, bottom_right_cutout, bottom_right_paste, scale)  # Draw bottom-right
+    _drawCorner(painter, pmap, bottom_right_cutout, bottom_right_paste, scale)  # Draw bottom-right
 
     top_right_cutout,top_right_paste = QRect(w-es, 0, w, es), QPoint(object.width()-shrink, 0)  # Bottom-left corner (adjust as needed)
-    drawCorner(painter, pmap, top_right_cutout, top_right_paste, scale)  # Draw top-right
+    _drawCorner(painter, pmap, top_right_cutout, top_right_paste, scale)  # Draw top-right
 
 
-        
-
-def drawHorizontal(p: QPainter, pmap: QPixmap, cut: QRect, startY, cornerSize: int, scale: float):
+def _drawHorizontal(p: QPainter, pmap: QPixmap, cut: QRect, startY, cornerSize: int, scale: float):
     obj = p.device()
     # Extract and scale the pixmap region
     fpmap = pmap.copy(cut)
@@ -118,7 +110,7 @@ def drawHorizontal(p: QPainter, pmap: QPixmap, cut: QRect, startY, cornerSize: i
 
         p.drawPixmap(QPoint(x, startY), fpmap)
 
-def drawVertical(p: QPainter, pmap: QPixmap, cut: QRect, startX, cornerSize: int, scale: float):
+def _drawVertical(p: QPainter, pmap: QPixmap, cut: QRect, startX, cornerSize: int, scale: float):
     obj = p.device()
     # Extract and scale the pixmap region
     fpmap = pmap.copy(cut)
@@ -147,10 +139,8 @@ def drawVertical(p: QPainter, pmap: QPixmap, cut: QRect, startX, cornerSize: int
             break
 
         p.drawPixmap(QPoint(startX, y), fpmap)
-        
-
-
-def drawCorner(p,pmap,cut,paste,scale):
+    
+def _drawCorner(p,pmap,cut,paste,scale):
             fpmap = pmap.copy(cut)
             fpmap = fpmap.scaled(fpmap.width()*scale, fpmap.height()*scale, Qt.AspectRatioMode.IgnoreAspectRatio, Qt.TransformationMode.FastTransformation)
 

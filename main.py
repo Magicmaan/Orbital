@@ -5,6 +5,11 @@ from PySide6.QtWidgets import QApplication
 
 from Program import Program
 
+#FIX SIZE POLICY
+#U SET IT TO USE A DECORATOR
+#REVERT IT OR FIX IDIOT
+
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     

@@ -4,7 +4,10 @@ from PySide6.QtWidgets import (QHBoxLayout, QLabel, QPushButton, QSizePolicy,
                                QWidget,QMenuBar,QMenu)
 
 from GUI.Widgets.WidgetUtils import drawPixelBorder, removePadding
+from GUI.Widgets.Decorators import PixelBorder, sizePolicy
 
+
+@PixelBorder
 
 class Contextbar(QMenuBar):
     def __init__(self, parent=None):
@@ -55,17 +58,6 @@ class Contextbar(QMenuBar):
             self.addMenuCust("Default2",temp,d+1)
         
         parentMenu.addMenu(temp)
-
-
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        
-        # Fill the entire widget with a green color
-        # Draw edges from the pixmap
-        drawPixelBorder(self,painter,QPixmap("Resources/button.png"))
-        
-        # End painting
-        super().paintEvent(event)
         
     
         

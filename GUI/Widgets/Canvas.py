@@ -7,9 +7,11 @@ from PySide6.QtGui import QPainter, QPixmap, QWheelEvent
 from PySide6.QtWidgets import QLabel, QSizePolicy, QVBoxLayout, QWidget, QGridLayout
 
 from DialogBox import ErrorDialog, SuccessDialog
-from GUI.Widgets.WidgetUtils import drawPixelBorder, removePadding
+from GUI.Widgets.WidgetUtils import removePadding
 
 DEFAULT_IMG = "Resources/default_canvas.png"
+
+
 
 class Canvas(QWidget):
     def __init__(self, filepath=None, parent=None) -> None:

@@ -7,6 +7,7 @@ from GUI.Widgets.Titlebar import Titlebar
 from GUI.Widgets.WidgetUtils import drawPixelBorder, removePadding
 from Utils import *
 
+from GUI.Widgets.Decorators import PixelBorder, sizePolicy
 
 class MouseEventFilter(QObject):
     def __init__(self, custom_window):
@@ -26,6 +27,9 @@ class MouseEventFilter(QObject):
 
         return super().eventFilter(obj, event)
 
+
+@PixelBorder
+
 class customWindow(QWidget):
     def __init__(self, parent: QMainWindow):
         super().__init__(parent)
@@ -37,11 +41,11 @@ class customWindow(QWidget):
         self.resize(self.parent.size())
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setObjectName("customWindow")
-
+        
         self.setLayout(QGridLayout())
         removePadding(self)
 
-        self.parent.appContainer.setContentsMargins(6,8,6,6)  # Add border
+        self.parent.appContainer.setContentsMargins(4,6,4,4)  # Add border
 
         self.customTitleBar()
 
@@ -155,16 +159,7 @@ class customWindow(QWidget):
             else:
                 self.parent.showMaximized()
     
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        
-        # Fill the entire widget with a green color
-        # Draw edges from the pixmap
-        #painter.fillRect(self.rect(),QColor(128,0,128))
-        drawPixelBorder(self,painter,QPixmap("Resources/button.png"))
-        
-        # End painting
-        painter.end()
+    
 
     
 

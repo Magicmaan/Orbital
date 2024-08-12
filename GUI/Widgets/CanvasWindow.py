@@ -33,6 +33,9 @@ class Image(QWidget):
         else:
             return False
     
+from GUI.Widgets.Decorators import PixelBorder, sizePolicy
+
+@PixelBorder
 
 class Viewport(QWidget):
     def __init__(self, parent=None) -> None:
@@ -60,8 +63,8 @@ class Viewport(QWidget):
 
         self.setLayout(QVBoxLayout())
         layout = self.layout()
-
         removePadding(self)
+
         self.setContentsMargins(5,5,5,5)
 
 
@@ -114,10 +117,7 @@ class Viewport(QWidget):
         return QPoint(int(point.x() * scale_factor), int(point.y() * scale_factor))
 
     def paintEvent(self, event):
-
         painter = QPainter(self)
-
-        drawPixelBorder(self,painter,QPixmap("Resources/button.png"))
 
         painter.drawPixmap(self.imagePosition.x(), self.imagePosition.y(), self.pixmap)
 

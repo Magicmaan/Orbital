@@ -4,7 +4,9 @@ from PySide6.QtWidgets import (QHBoxLayout, QLabel, QPushButton, QSizePolicy,
                                QSpacerItem, QWidget)
 
 from GUI.Widgets.WidgetUtils import drawPixelBorder, removePadding
+from GUI.Widgets.Decorators import PixelBorder, sizePolicy
 
+@PixelBorder
 
 class Titlebar(QWidget):
     def __init__(self, appWindow,parent=None):
@@ -25,7 +27,7 @@ class Titlebar(QWidget):
         self.layout().setObjectName("containerLayout")
         self.layout().setAlignment(Qt.AlignmentFlag.AlignLeft)
         removePadding(self)
-        self.setContentsMargins(5,5,5,5)
+        self.setContentsMargins(5,0,5,0)
 
         self.setStyleSheet(
             "background: transparent;"
@@ -81,13 +83,4 @@ class Titlebar(QWidget):
 
         return btn
 
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        
-        # Fill the entire widget with a green color
-        # Draw edges from the pixmap
-        #painter.fillRect(self.rect(),QColor(128,0,128))
-        drawPixelBorder(self,painter,QPixmap("Resources/button.png"))
-        
-        # End painting
-        painter.end()
+    
