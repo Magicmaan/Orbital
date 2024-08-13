@@ -66,7 +66,10 @@ class Viewport(QWidget):
         self.lastPoint = QPoint()
         self.currentPoint = QPoint()
         self.dragging = False
+        
         self.cursorPos = QPoint(0,0)
+        self.snapCursor = False
+
         self.pixmap = QPixmap(self.fixed_size)
         
 
@@ -141,20 +144,26 @@ class Viewport(QWidget):
         square_top_left_x = (local_pos.x()-1 - imgPos.x()) // imgscale
         square_top_left_y = (local_pos.y()-1 - imgPos.y()) // imgscale
 
-        cPosX = clamp(square_top_left_x-(imgPos.x() // imgscale),0,self.canvas.width())
-        cPosY = clamp(square_top_left_y-(imgPos.y() // imgscale),0,self.canvas.height())
+        cPosX = square_top_left_x-(imgPos.x() // imgscale)
+        cPosY = square_top_left_y-(imgPos.y() // imgscale)
+        
+        
+
         self.cursorPos = QPoint(cPosX,cPosY)
 
         # Update label with current square's top-left x-coordinate
         self.label.setText(f"X: {self.cursorPos.x()} \nY: {self.cursorPos.y()}")
 
-        
+        if self.snapCursor:
+            cPosX = clamp(cPosX,0,self.canvas.width()-1)
+            cPosY = clamp(cPosY,0,self.canvas.height()-1)
 
-
-        painter.drawRect(QRect( (0.5+self.cursorPos.x() *imgscale) +imgPos.x(),
-                                (0.5+self.cursorPos.y() *imgscale) +imgPos.y(),
-                                imgscale,
-                                imgscale) )
+        #bounds check of canvas
+        if (cPosX >= 0 and cPosX <= self.canvas.width()-1) and (cPosY >= 0 and cPosY <= self.canvas.height()-1):
+            painter.drawRect(QRect( (0.5+cPosX *imgscale) +imgPos.x(),
+                                    (0.5+cPosY *imgscale) +imgPos.y(),
+                                    imgscale,
+                                    imgscale))
 
     def paintViewport(self,painter):
         pass

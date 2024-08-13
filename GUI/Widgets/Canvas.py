@@ -16,7 +16,6 @@ DEFAULT_IMG = "Resources/default_canvas.png"
 class Canvas(QWidget):
     def __init__(self, filepath=None, parent=None) -> None:
         super().__init__(parent)
-
         self.setObjectName("Canvas")
         self.setLayout(QHBoxLayout())
         layout = self.layout()
@@ -26,6 +25,9 @@ class Canvas(QWidget):
         #self.filepath = filepath
         self.scale = 1
         self._scaleImageCache = None
+
+        self.setFixedSize(self.image.size())
+        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
 
     def drawPixel(self,pixel,position):
