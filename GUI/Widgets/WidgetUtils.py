@@ -41,7 +41,7 @@ def removePadding(object):
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
 
-def drawPixelBorder(object, painter: QPainter,pmap,edgeSize=2,scale=2):
+def drawPixelBorder(object, painter: QPainter,pmap:QPixmap,edgeSize=2,scale=2,Fill=True):
     es = edgeSize  # Size of the edge sections
     w,h = pmap.width(),pmap.height()
 
@@ -54,8 +54,10 @@ def drawPixelBorder(object, painter: QPainter,pmap,edgeSize=2,scale=2):
         -shrink, -shrink
     )
 
-    #fill in main colour
-    painter.fillRect(shrunk_rect, pmap.toImage().pixelColor(6, 6))  # Green color
+    if Fill:
+        #fill in main colour
+        painter.fillRect(shrunk_rect, pmap.toImage().pixelColor(pmap.width()//2, pmap.height()//2))  # Green color
+    
     #sides ----------------------------------------------------------------
     top_cutout = QRect(es,0,w-es-1,2)
     _drawHorizontal(painter, pmap, top_cutout, 0, es, scale)

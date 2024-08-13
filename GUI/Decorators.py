@@ -14,8 +14,11 @@ def PixelBorder(cls):
     if not hasattr(cls,"pixelBorderPath"):
         cls.pixelBorderPath = "Resources/button.png"
     
-    if not hasattr(cls,"pixelBorderCache"):
+    if not hasattr(cls,"_pixelBorderCache"):
         cls._pixelBorderCache = None
+    
+    if not hasattr(cls,"pixelBorderFill"):
+        cls.pixelBorderFill = True
 
     def _generatePixelBorder(self):
         width = self.width()
@@ -24,7 +27,7 @@ def PixelBorder(cls):
 
         painter = QPainter(pmap)
 
-        drawPixelBorder(pmap, painter,QPixmap(self.pixelBorderPath),3)
+        drawPixelBorder(pmap, painter,QPixmap(self.pixelBorderPath),3,2,self.pixelBorderFill)
 
         self._pixelBorderCache = pmap
 

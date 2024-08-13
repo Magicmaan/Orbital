@@ -28,7 +28,7 @@ class Toolbar(QWidget):
         self.setStyleSheet(
             "background:transparent;"
         )
-
+        
         self.setupUi()
 
     def setupUi(self):
