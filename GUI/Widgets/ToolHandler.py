@@ -6,15 +6,20 @@ from PySide6.QtWidgets import (QHBoxLayout, QLabel, QPushButton, QSizePolicy,
 from GUI.Widgets.WidgetUtils import drawPixelBorder, removePadding
 
 from GUI.Decorators import PixelBorder, sizePolicy
+from Tools.brush import Brush
+from Utils import DotDict
 
 @PixelBorder
 class ToolHandler(QWidget):
-    def __init__(self, parent: QWidget) -> None:
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
-
         #contains tool selection
-        self.tools = []
-        #indidividual tool config (size, colour, selection etc etc)
-        self.tool_settings = []
+        self.brush = Brush()
 
-        self.current_tool = None
+        #indidividual tool config (size, colour, selection etc etc)
+        self.tool_config = DotDict()
+
+        self.current_tool = self.brush
+    
+    def onAction(self, position, painter=None):
+        self.current_tool.onAction(position, painter)

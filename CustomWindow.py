@@ -50,7 +50,7 @@ class customWindow(QWidget):
         #setup custom border
         
         self.parent.setWindowFlags(Qt.FramelessWindowHint)
-        self.parent.setAttribute(Qt.WA_TranslucentBackground)  
+        #self.parent.setAttribute(Qt.WA_TranslucentBackground)  
         self.pixelBorderPath = "Resources/coloured.png"
 
         # Set the central widget for the MainWindow

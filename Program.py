@@ -8,6 +8,7 @@ from DiscordPresence import *
 from GUI.Widgets.CanvasWindow import Viewport
 from GUI.Widgets.Toolbar import Toolbar
 from GUI.Widgets.Contextbar import Contextbar
+from GUI.Widgets.ToolHandler import ToolHandler
 from GUI.Widgets.WidgetUtils import drawPixelBorder, removePadding
 from Utils import getFont
 
@@ -49,12 +50,6 @@ class Program(QMainWindow):
         #set custom font
         font_Path = "Resources/fonts/minecraft_font.ttf"
         self.setCustFont(font_Path,8)
-
-
-        
-
-        
-
         
         
         self.setLayout(QVBoxLayout())
@@ -78,7 +73,7 @@ class Program(QMainWindow):
         self.windowContainer.addWidget(self.contextBar)
 
         centerContainer = QWidget(self.window)
-        centerContainer.setStyleSheet("background:rgb(200,200,200);border-radius:0px;")
+        centerContainer.setStyleSheet("background:rgb(180,165,147);border-radius:0px;")
         centerContainer.resize(QSize(800,600))
         centerContainer.setSizePolicy(QSizePolicy.Expanding,QSizePolicy.Expanding)
         centerContainerLayout = QGridLayout(centerContainer)
@@ -101,13 +96,15 @@ class Program(QMainWindow):
         
         #Create and configure the Canvas widget
         self.canvas = Viewport()
+        self.currentTarget = self.canvas
         #self.canvas.setStyleSheet("border: purple 5px solid;")
         # Add the Canvas widget to the layout
         centerContainerLayout.addWidget(self.canvas,1,1)
         
         centerContainerLayout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
-        
+        self.tools = ToolHandler()
+        self.tools.current_tool.target = self.currentTarget.canvas.image
 
         RightBar = pixelWidget()
         RightBar.setFixedWidth(25)

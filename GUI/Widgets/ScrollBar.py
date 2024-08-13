@@ -1,12 +1,13 @@
-from PySide6.QtCore import Qt, QRect, QSize
-from PySide6.QtGui import QPainter, QColor
+from PySide6.QtCore import Qt, QRect, QSize, QPoint
+from PySide6.QtGui import QPainter, QColor, QPixmap
 from PySide6.QtWidgets import QApplication, QMainWindow, QTextEdit, QScrollBar
+from GUI.Widgets.WidgetUtils import drawPixelBorder
 
 class CustomScrollBar(QScrollBar):
     def __init__(self, orientation=Qt.Vertical, parent=None):
         super().__init__(orientation, parent)
         self.setOrientation(orientation)
-        self.setFixedWidth(20)  # Set the width of the scroll bar
+        self.setFixedWidth(24)  # Set the width of the scroll bar
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -20,7 +21,11 @@ class CustomScrollBar(QScrollBar):
         # Draw the handle
         painter.setBrush(QColor(102, 102, 102))  # Light gray handle
         painter.setPen(Qt.NoPen)
-        painter.drawRect(handle_rect)
+        size = 24
+
+        path = "Resources/icons/scrollbar.png"
+        drawPixelBorder(self,painter,QPixmap(path))
+        #painter.drawPixmap(QPoint(0,0),QPixmap("Resources/icons/scrollbar.png").scaled(size, size, Qt.KeepAspectRatio, Qt.FastTransformation))
 
         # Optionally, draw top and bottom arrow buttons
         self._draw_arrows(painter)

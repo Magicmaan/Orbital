@@ -5,7 +5,7 @@ from math import log, exp
 
 from PySide6.QtCore import QPoint, QRect, QSize, Qt
 from PySide6.QtGui import QPainter, QPixmap, QWheelEvent, QColor
-from PySide6.QtWidgets import QLabel, QSizePolicy, QVBoxLayout, QWidget, QScrollBar
+from PySide6.QtWidgets import QLabel, QSizePolicy, QVBoxLayout, QWidget, QScrollBar, QGridLayout, QSlider, QApplication
 
 from DialogBox import ErrorDialog, SuccessDialog
 from GUI.Widgets.WidgetUtils import drawPixelBorder, removePadding
@@ -49,7 +49,9 @@ class Viewport(QWidget):
         self.fixed_size = QSize(sX, sY)
 
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-       
+
+        self.program = QApplication.instance().program
+
         self.imageScaleRange = (0.25, 50)
         self._imageScale = 1
         self._imagePosition = QPoint(0, 0)
@@ -60,46 +62,50 @@ class Viewport(QWidget):
         self._canvasCache = {}
         
 
-
         self.shapes = []
         self.drawing = False
         self.lastPoint = QPoint()
         self.currentPoint = QPoint()
         self.dragging = False
-        
+
         self.cursorPos = QPoint(0,0)
         self.snapCursor = False
 
         self.pixmap = QPixmap(self.fixed_size)
         
 
-        self.setLayout(QVBoxLayout())
+        self.setLayout(QGridLayout())
         layout = self.layout()
         removePadding(self)
-
-        self.setContentsMargins(2,2,2,2)
+        layout.setAlignment(Qt.AlignBottom)
+        layout.setRowStretch(0, 2)
+        layout.setSpacing(0)
+        layout.setContentsMargins(0,0,0,0)
+        self.setContentsMargins(6,6,6,6)
 
 
         # Example widget: QLabel on top of the pixmap
         self.label = QLabel("This is a label on top of the pixmap", self)
         self.label.setStyleSheet("color: white;")
         self.label.setStyleSheet("background:transparent;")
-        layout.addWidget(self.label, alignment=Qt.AlignTop)
+        layout.addWidget(self.label,0,1)
+        
 
         # Create a vertical QScrollBar
-        scroll_vert = CustomScrollBar(Qt.Vertical)
-        scroll_vert.setRange(0, self.height())
+        scroll_vert = QSlider(Qt.Vertical)
+        scroll_vert.setRange(0, self.canvas.height())
         scroll_vert.setValue(0)
+        scroll_vert.connect
         scroll_vert.valueChanged.connect(self.scrollVertical)
-        layout.addWidget(scroll_vert)
+        layout.addWidget(scroll_vert,0,0)
 
         # Create a vertical QScrollBar
-        scroll_horiz = QScrollBar(self)
+        scroll_horiz = QScrollBar(Qt.Vertical)
         scroll_horiz.setOrientation(Qt.Horizontal)
         scroll_horiz.setRange(0, self.width())
         scroll_horiz.setValue(0)
         scroll_horiz.valueChanged.connect(self.scrollHorizontal)
-        layout.addWidget(scroll_horiz)
+        layout.addWidget(scroll_horiz,4,1)
 
         self.update()
 
@@ -215,7 +221,9 @@ class Viewport(QWidget):
         if event.button() == Qt.LeftButton:
             self.lastPoint = self._mapToFixedSize(event.position().toPoint())
             self.drawing = True
-            self._imageScale = max(0.1, self._imageScale - 0.1)  # Ensure the scale is not zero or negative
+            #self._imageScale = max(0.1, self._imageScale - 0.1)  # Ensure the scale is not zero or negative
+
+            self.program.tools.onAction(self.cursorPos)
 
         if event.button() == Qt.RightButton:
             self._imageScale += 0.1
@@ -264,7 +272,7 @@ class Viewport(QWidget):
 
         if self.drawing:
             self.shapes.append((self._mapToFixedSize(self.lastPoint), self._mapToFixedSize(self.currentPoint)))
-            
+            self.program.tools.onAction(self.cursorPos)
             
         
         if self.dragging:
