@@ -9,6 +9,7 @@ from GUI.Widgets.CanvasWindow import Viewport
 from GUI.Widgets.Toolbar import Toolbar
 from GUI.Widgets.Contextbar import Contextbar
 from GUI.Widgets.ToolHandler import ToolHandler
+from GUI.Widgets.ColourPicker import ColourPicker
 from GUI.Widgets.WidgetUtils import drawPixelBorder, removePadding
 from Utils import getFont
 
@@ -84,10 +85,13 @@ class Program(QMainWindow):
         #self.windowContainer.setColumnStretch(0,1)
         
         leftBar = pixelWidget()
-        leftBar.setFixedWidth(200)
-        leftBar.setSizePolicy(QSizePolicy.Fixed,QSizePolicy.Expanding)
+        leftBar.setMaximumWidth(300)
+        leftBar.setSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.Expanding)
         leftBar.setLayout(QVBoxLayout())
-        removePadding(leftBar)
+        leftBar.layout().setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        leftBar.setContentsMargins(0,0,0,0)
+        leftBar.layout().setContentsMargins(0,0,0,0)
+        leftBar.layout().addWidget(ColourPicker())
 
        
         centerContainerLayout.addWidget(leftBar,1,0)

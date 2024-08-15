@@ -44,7 +44,7 @@ from GUI.Decorators import PixelBorder, sizePolicy
 class Viewport(QWidget):
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
-        self.setMouseTracking(True)
+        
         sX, sY = 128, 128
         self.fixed_size = QSize(sX, sY)
 
@@ -61,7 +61,7 @@ class Viewport(QWidget):
         self._canvasSettings = {    }
         self._canvasCache = {}
         
-
+        self.setMouseTracking(True)
         self.shapes = []
         self.drawing = False
         self.lastPoint = QPoint()
@@ -89,24 +89,6 @@ class Viewport(QWidget):
         self.label.setStyleSheet("color: white;")
         self.label.setStyleSheet("background:transparent;")
         layout.addWidget(self.label,0,1)
-        
-
-        # Create a vertical QScrollBar
-        scroll_vert = QSlider(Qt.Vertical)
-        scroll_vert.setRange(0, self.canvas.height())
-        scroll_vert.setValue(0)
-        scroll_vert.connect
-        scroll_vert.valueChanged.connect(self.scrollVertical)
-        layout.addWidget(scroll_vert,0,0)
-
-        # Create a vertical QScrollBar
-        scroll_horiz = QScrollBar(Qt.Vertical)
-        scroll_horiz.setOrientation(Qt.Horizontal)
-        scroll_horiz.setRange(0, self.width())
-        scroll_horiz.setValue(0)
-        scroll_horiz.valueChanged.connect(self.scrollHorizontal)
-        layout.addWidget(scroll_horiz,4,1)
-
         self.update()
 
     def scrollVertical(self, value):
@@ -117,7 +99,6 @@ class Viewport(QWidget):
         self.moveCanvas(QPoint(self._imagePosition.x(), value))
 
         self.update()
-    
     def scrollHorizontal(self, value):
         # Update the label with the current scroll value
         self.label.setText(f"Scroll Value: {value}")
@@ -137,39 +118,25 @@ class Viewport(QWidget):
         #draw the canvas to Viewport
         painter.drawPixmap(self._imagePosition.x(), self._imagePosition.y(), canvas)
 
-    def paintPixelPosition(self,painter):
+    def paintPixelPosition(self, painter):
         # Set the brush and pen for the square
         painter.setBrush(QColor(100, 200, 150))  # Fill color
         painter.setPen(QColor(50, 100, 75))  # Border color     
 
-        imgPos = self._imagePosition
-        imgscale = self._imageScale
+        img_pos = self._imagePosition
+        img_scale = self._imageScale
 
-        # Get the current position in the local coordinate system
-        local_pos = self.currentPoint + imgPos
-        square_top_left_x = (local_pos.x()-1 - imgPos.x()) // imgscale
-        square_top_left_y = (local_pos.y()-1 - imgPos.y()) // imgscale
+       
 
-        cPosX = square_top_left_x-(imgPos.x() // imgscale)
-        cPosY = square_top_left_y-(imgPos.y() // imgscale)
-        
-        
-
-        self.cursorPos = QPoint(cPosX,cPosY)
-
-        # Update label with current square's top-left x-coordinate
-        self.label.setText(f"X: {self.cursorPos.x()} \nY: {self.cursorPos.y()}")
-
-        if self.snapCursor:
-            cPosX = clamp(cPosX,0,self.canvas.width()-1)
-            cPosY = clamp(cPosY,0,self.canvas.height()-1)
-
-        #bounds check of canvas
-        if (cPosX >= 0 and cPosX <= self.canvas.width()-1) and (cPosY >= 0 and cPosY <= self.canvas.height()-1):
-            painter.drawRect(QRect( (0.5+cPosX *imgscale) +imgPos.x(),
-                                    (0.5+cPosY *imgscale) +imgPos.y(),
-                                    imgscale,
-                                    imgscale))
+        self.cursorPos = self._mapToCanvas(self.currentPoint)
+        # Bounds check of canvas and draw the square if within bounds
+        if (0 <= self.cursorPos.x() < self.canvas.width()) and (0 <= self.cursorPos.y() < self.canvas.height()):
+            painter.drawRect(QRect(
+                self.cursorPos.x() * img_scale + img_pos.x(),
+                self.cursorPos.y() * img_scale + img_pos.y(),
+                img_scale,
+                img_scale
+            ))
 
     def paintViewport(self,painter):
         pass
@@ -204,22 +171,42 @@ class Viewport(QWidget):
         self._imagePosition.setX(tempx)
         self._imagePosition.setY(tempy)
 
+    def _mapToCanvas(self, point:QPoint):
+        """
+        Maps the viewport coordinates to canvas
+        """
+        img_pos = self._imagePosition
+        img_scale = self._imageScale
 
-    def _mapToFixedSize(self, point):
-        # Map the widget's coordinates to the fixed-size resolution
+        # Calculate position in canvas coordinates
+        canvas_x = (point.x() - img_pos.x()) / img_scale
+        canvas_y = (point.y() - img_pos.y()) / img_scale
 
-        return QPoint(int(point.x() * self._imageScale), int(point.y() * self._imageScale))
+        # Return the mapped QPoint
+        return QPoint(int(canvas_x), int(canvas_y))
 
-    def _mapFromFixedSize(self, point):
-        # Map the fixed-size coordinates to the widget's coordinate system
-        return QPoint(int(point.x() * self._imageScale), int(point.y() * self._imageScale))
+    def _mapFromCanvas(self, point:QPoint):
+        """
+        Map the canvas coordinates to the viewport
+        """
 
+        img_pos = self._imagePosition
+        img_scale = self._imageScale
+
+        # Calculate position in viewport coordinates
+        viewport_x = point.x() * img_scale + img_pos.x()
+        viewport_y = point.y() * img_scale + img_pos.y()
+
+        # Return the mapped QPoint
+        return QPoint(int(viewport_x), int(viewport_y))
+
+    
     
 
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
-            self.lastPoint = self._mapToFixedSize(event.position().toPoint())
+            self.lastPoint = self._mapToCanvas(event.position().toPoint())
             self.drawing = True
             #self._imageScale = max(0.1, self._imageScale - 0.1)  # Ensure the scale is not zero or negative
 
@@ -263,7 +250,6 @@ class Viewport(QWidget):
         # Convert back from logarithmic to linear scale
         self._imageScale = exp(log_scale)
         
-
         self.update()
 
     def mouseMoveEvent(self, event):
@@ -271,7 +257,8 @@ class Viewport(QWidget):
         self.lastPoint = self.currentPoint  # Update last point for the next segment
 
         if self.drawing:
-            self.shapes.append((self._mapToFixedSize(self.lastPoint), self._mapToFixedSize(self.currentPoint)))
+            self.update()
+            #self.shapes.append((self._mapToFixedSize(self.lastPoint), self._mapToFixedSize(self.currentPoint)))
             self.program.tools.onAction(self.cursorPos)
             
         
@@ -281,13 +268,13 @@ class Viewport(QWidget):
 
         self.update()  # Request a repaint to finalize the line
 
-    
-
     def mouseReleaseEvent(self, event):
         if event.button() == Qt.LeftButton:
             self.drawing = False
         
         if event.button() == Qt.MiddleButton:
             self.dragging = False
+        
+        self.update()
     
     
