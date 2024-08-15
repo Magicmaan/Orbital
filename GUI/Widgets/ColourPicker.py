@@ -206,7 +206,7 @@ class RGBSpectrumWidget(QWidget):
     def getRGB(self) -> QColor:
         if not self.colour or self.mousePos != self.lastMousePos:
             self.colour = self._getColourAtPoint(self.mousePos)
-            print("COLOUR IS:" + str(self.colour.getRgb()))
+            #print("COLOUR IS:" + str(self.colour.getRgb()))
             self.colourChanged.emit(self.colour)
             self.backgroundFill = self.colour
         return self.colour

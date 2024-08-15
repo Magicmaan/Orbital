@@ -1,4 +1,4 @@
-from PySide6.QtCore import QSize, Qt
+from PySide6.QtCore import QSize, Qt, Slot, Signal
 from PySide6.QtGui import QCursor, QIcon, QPainter, QPixmap, QTransform, QPaintDevice, QColor
 from PySide6.QtWidgets import (QHBoxLayout, QLabel, QPushButton, QSizePolicy,
                                QWidget, QApplication)
@@ -28,5 +28,13 @@ class Brush():
     def onAction(self, position, painter=None):
         if painter==None:
             painter = QPainter(self.target)
+        
+        painter.setPen(self.colour)
         painter.drawPoint(position)
         painter.end()
+    
+    @Slot(QColor)
+    def _updateColour(self, value:QColor):
+        print(value)
+        print("Brush received colourUpdate")
+        self.colour = value

@@ -91,7 +91,8 @@ class Program(QMainWindow):
         leftBar.layout().setAlignment(Qt.AlignmentFlag.AlignHCenter)
         leftBar.setContentsMargins(0,0,0,0)
         leftBar.layout().setContentsMargins(0,0,0,0)
-        leftBar.layout().addWidget(ColourPicker())
+        self.colourPicker = ColourPicker()
+        leftBar.layout().addWidget(self.colourPicker)
 
        
         centerContainerLayout.addWidget(leftBar,1,0)
@@ -109,6 +110,8 @@ class Program(QMainWindow):
         
         self.tools = ToolHandler()
         self.tools.current_tool.target = self.currentTarget.canvas.image
+
+        self.colourPicker.colorWheel.colourChanged.connect(self.tools.current_tool._updateColour)
 
         RightBar = pixelWidget()
         RightBar.setFixedWidth(25)
