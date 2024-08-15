@@ -22,18 +22,24 @@ class ColourPicker(QWidget):
         self.colorWheel.setSize(128)
         self.opacitySlider = QSlider(Qt.Horizontal)
         self.opacitySlider.setContentsMargins(0,0,0,0)
+        self.opacitySlider.setRange(0,255)
         # Set background color using setStyleSheet
         self.setStyleSheet("background-color: lightblue;")
         self.setLayout(QVBoxLayout())
         self.layout().addWidget(self.colorWheel)
         self.layout().addWidget(self.opacitySlider)
 
+        self.opacitySlider.valueChanged.connect(self._updateAlpha)
         self.redlabel = QLabel("0")
         self.layout().addWidget(self.redlabel)
 
+        self.greenlabel = QLabel("0")
+        self.layout().addWidget(self.greenlabel)
 
+        self.bluelabel = QLabel("0")
+        self.layout().addWidget(self.bluelabel)
 
-        self.colorWheel.colourChanged.connect(self.update_label)
+        self.colorWheel.colourChanged.connect(self._updateColour)
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         print(f"Colour at: {self.getRGBA()}")
@@ -59,16 +65,22 @@ class ColourPicker(QWidget):
         pass
 
     @Slot(QColor)
-    def update_label(self, value):
-        print("Signal lol")
-        print(value)
-        self.redlabel.setText(str(value))
+    def _updateColour(self, value):
+        self.colour = value
+
+        self.redlabel.setText(str(value.red()))
+        self.greenlabel.setText(str(value.green()))
+        self.bluelabel.setText(str(value.blue()))
+    
+    def _updateAlpha(self, value):
+        self.colorWheel.opacity = value
+
 
 
 
 @PixelBorder
 class RGBSpectrumWidget(QWidget):
-    colourChanged = Signal(int)
+    colourChanged = Signal(QColor)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -77,7 +89,7 @@ class RGBSpectrumWidget(QWidget):
         self.setFixedSize(255,160)
         self._PixmapSpectrum = None  # Cache for the spectrum pixmap
         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-
+        self.backgroundFill = QColor(255,255,255,255)
         self._displayModes = (self._RGBSpectrum, self._HSVSpectrum, self._HSLSpectrum, self._CMYKSpectrum)#
         self.currentDisplayMode = self._displayModes[1]
 
@@ -152,10 +164,13 @@ class RGBSpectrumWidget(QWidget):
 
         painter = QPainter(self)
 
+        if self.backgroundFill:
+            painter.fillRect(self.rect(),self.backgroundFill)
+
         #draw spectrum
-        painter.setOpacity(self.opacity)
+        painter.setOpacity(self.opacity/255)
         painter.drawPixmap(0, 0, self._PixmapSpectrum)
-        painter.setOpacity(255)
+        painter.setOpacity(1)
 
         painter.setPen(QColor(255,255,255))
         pos = QRect(self.mousePos.x(),self.mousePos.y(),5,5)
@@ -174,6 +189,9 @@ class RGBSpectrumWidget(QWidget):
         self.update()
     
     def mouseMoveEvent(self, event):
+        if event.button() == Qt.LeftButton: 
+            
+            self.mousePos = event.localPos().toPoint()
         self.update()
         #return super().mouseMoveEvent(event)
 
@@ -181,7 +199,7 @@ class RGBSpectrumWidget(QWidget):
         if (position.x() >= 0 and position.x() <= self.width()) and (position.y() >= 0 and position.y() <= self.height()):
             pmap = self._PixmapSpectrum
             colour = pmap.toImage().pixelColor(position)
-            
+            colour.setAlpha(self.opacity)
             return colour
 
     @Slot()
@@ -189,8 +207,8 @@ class RGBSpectrumWidget(QWidget):
         if not self.colour or self.mousePos != self.lastMousePos:
             self.colour = self._getColourAtPoint(self.mousePos)
             print("COLOUR IS:" + str(self.colour.getRgb()))
-            self.colourChanged.emit(self.colour.getRgb())
-
+            self.colourChanged.emit(self.colour)
+            self.backgroundFill = self.colour
         return self.colour
         
     def setSize(self,squareSize:int):   
