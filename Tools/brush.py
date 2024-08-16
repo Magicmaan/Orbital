@@ -1,9 +1,11 @@
-from PySide6.QtCore import QSize, Qt, Slot, Signal
+from PySide6.QtCore import QSize, Qt, Slot, Signal, QPoint
 from PySide6.QtGui import QCursor, QIcon, QPainter, QPixmap, QTransform, QPaintDevice, QColor
 from PySide6.QtWidgets import (QHBoxLayout, QLabel, QPushButton, QSizePolicy,
                                QWidget, QApplication)
 
 from Utils import DotDict
+from GUI.Decorators import PixelBorder, sizePolicy, mouseClick
+
 
 class Brush():
     def __init__(self) -> None:
@@ -16,6 +18,7 @@ class Brush():
 
         self.target = None
         self.properties = self.defaultProperties
+        self.colour = QColor(255,255,255,255)
 
 
     def setTarget(self,target:QPaintDevice):

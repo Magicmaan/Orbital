@@ -12,35 +12,15 @@ from GUI.Widgets.WidgetUtils import drawPixelBorder, removePadding
 from GUI.Widgets.ScrollBar import CustomScrollBar
 from GUI.Widgets.Canvas import Canvas
 from Utils import clamp
+
+from GUI.Decorators import PixelBorder, sizePolicy, mouseClick
 DEFAULT_IMG = "Resources/default_canvas.png"
 
 
 
-class Image(QWidget):
-    def __init__(self, texturepath=DEFAULT_IMG, parent=None) -> None:
-        super().__init__(parent)
-        self.image = QPixmap()
-        self.texturepath = texturepath
-        self.loadTexture()
-        self.name = "LOLL"
-        
-
-    def loadTexture(self, texturepath=None) -> bool:
-        if texturepath:
-            self.texturepath = texturepath
-
-        if exists(self.texturepath):
-            self.image.load(self.texturepath)
-            self.update()
-            return True
-        else:
-            return False
-    
-from GUI.Decorators import PixelBorder, sizePolicy
-
-
 
 @PixelBorder
+@mouseClick
 class Viewport(QWidget):
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
@@ -52,14 +32,16 @@ class Viewport(QWidget):
 
         self.program = QApplication.instance().program
 
+        #image scaling and position
         self.imageScaleRange = (0.25, 50)
         self._imageScale = 1
         self._imagePosition = QPoint(0, 0)
-        #self.canvas = 
+
+
         self.canvas = Canvas("Resources/default_canvas.png")
         #["canvas_name"] : (canvas, scale, etc)
         self._canvasSettings = {    }
-        self._canvasCache = {}
+
         
         self.setMouseTracking(True)
         self.shapes = []
@@ -126,11 +108,10 @@ class Viewport(QWidget):
         img_pos = self._imagePosition
         img_scale = self._imageScale
 
-       
-
-        self.cursorPos = self._mapToCanvas(self.currentPoint)
+        self.cursorPos = self._mapToCanvas(self.mousePos)
         # Bounds check of canvas and draw the square if within bounds
         if (0 <= self.cursorPos.x() < self.canvas.width()) and (0 <= self.cursorPos.y() < self.canvas.height()):
+
             painter.drawRect(QRect(
                 self.cursorPos.x() * img_scale + img_pos.x(),
                 self.cursorPos.y() * img_scale + img_pos.y(),
@@ -200,11 +181,31 @@ class Viewport(QWidget):
         # Return the mapped QPoint
         return QPoint(int(viewport_x), int(viewport_y))
 
-    
-    
+    def paintpix(self):
+        self.program.tools.onAction(self.cursorPos)
 
+    def onMouseClick(self):
+        if self.mouseClicks.left:
+            self.paintpix()
 
-    def mousePressEvent(self, event):
+        if self.mouseClicks.right:
+            self._imageScale += 0.1
+        
+        if self.mouseClicks.middle:
+            self.offset = self._imagePosition - self.mousePressPos
+            self.moveCanvas(self.mousePos + self.offset)
+
+    def onMouseMove(self):
+        if self.mouseClicks.left:
+            self.paintpix()
+        
+        if self.mouseClicks.middle:
+            self.moveCanvas(self.mousePos + self.offset)
+
+        self.update()
+        print("Buh")
+
+    '''def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
             self.lastPoint = self._mapToCanvas(event.position().toPoint())
             self.drawing = True
@@ -219,10 +220,10 @@ class Viewport(QWidget):
         if event.button() == Qt.MiddleButton:
             self.dragging = True
             self.dragging_pos = event.position().toPoint()
-            self.offset = self._imagePosition - self.dragging_pos
+            self.offset = self._imagePosition - self.mousePressPos
 
 
-        self.update()
+        self.update()'''
 
     def wheelEvent(self, event: QWheelEvent):
         min_scale,max_scale = self.imageScaleRange
@@ -252,29 +253,29 @@ class Viewport(QWidget):
         
         self.update()
 
-    def mouseMoveEvent(self, event):
+    """def mouseMoveEvent(self, event):
         self.currentPoint = event.position().toPoint()
         self.lastPoint = self.currentPoint  # Update last point for the next segment
 
         if self.drawing:
             self.update()
             #self.shapes.append((self._mapToFixedSize(self.lastPoint), self._mapToFixedSize(self.currentPoint)))
-            self.program.tools.onAction(self.cursorPos)
+            
             
         
         if self.dragging:
             cpos = self._imagePosition
             self.moveCanvas(event.position() + self.offset)
 
-        self.update()  # Request a repaint to finalize the line
+        self.update()  # Request a repaint to finalize the line"""
 
-    def mouseReleaseEvent(self, event):
+    """def mouseReleaseEvent(self, event):
         if event.button() == Qt.LeftButton:
             self.drawing = False
         
         if event.button() == Qt.MiddleButton:
             self.dragging = False
         
-        self.update()
+        self.update()"""
     
     

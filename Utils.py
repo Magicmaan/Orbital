@@ -48,3 +48,7 @@ class DotDict(dict):
             del self[attr]
         except KeyError:
             raise AttributeError(f"'DotDict' object has no attribute '{attr}'")
+
+def dictAllFalse(dict):
+    """Check if all values in the dictionary are False."""
+    return all(value is False for value in dict.values())

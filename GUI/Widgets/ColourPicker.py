@@ -4,10 +4,8 @@ from PySide6.QtCore import Qt, QPoint, QRect, Signal, Slot
 
 from math import sqrt, atan2, sin, cos, tan, degrees, radians
 
-from GUI.Decorators import PixelBorder, sizePolicy
+from GUI.Decorators import PixelBorder, sizePolicy, mouseClick
 
-
-from GUI.Decorators import PixelBorder, sizePolicy
 
 
 
@@ -20,9 +18,12 @@ class ColourPicker(QWidget):
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.colorWheel = RGBSpectrumWidget()
         self.colorWheel.setSize(128)
+
         self.opacitySlider = QSlider(Qt.Horizontal)
         self.opacitySlider.setContentsMargins(0,0,0,0)
         self.opacitySlider.setRange(0,255)
+        self.opacitySlider.setValue(255)
+
         # Set background color using setStyleSheet
         self.setStyleSheet("background-color: lightblue;")
         self.setLayout(QVBoxLayout())
@@ -38,13 +39,9 @@ class ColourPicker(QWidget):
 
         self.bluelabel = QLabel("0")
         self.layout().addWidget(self.bluelabel)
-
+        
         self.colorWheel.colourChanged.connect(self._updateColour)
 
-    def mousePressEvent(self, event: QMouseEvent) -> None:
-        print(f"Colour at: {self.getRGBA()}")
-        self.update()
-        super().mousePressEvent(event)
 
     def getOpacity(self) -> int:
         
@@ -56,8 +53,6 @@ class ColourPicker(QWidget):
     def getRGBA(self) -> QColor:
         colour = self.getRGB()
         opacity = self.getOpacity()
-        print(type(colour))
-        print(opacity)
         colour.setAlpha(opacity)
         return colour
     
@@ -71,6 +66,8 @@ class ColourPicker(QWidget):
         self.redlabel.setText(str(value.red()))
         self.greenlabel.setText(str(value.green()))
         self.bluelabel.setText(str(value.blue()))
+
+
     
     def _updateAlpha(self, value):
         self.colorWheel.opacity = value
@@ -79,11 +76,13 @@ class ColourPicker(QWidget):
 
 
 @PixelBorder
+@mouseClick
 class RGBSpectrumWidget(QWidget):
     colourChanged = Signal(QColor)
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setMouseTracking(True)
         self.setWindowTitle("RGB Spectrum")
         self.setContentsMargins(0,0,0,0)
         self.setFixedSize(255,160)
@@ -95,7 +94,8 @@ class RGBSpectrumWidget(QWidget):
 
         self.colour = None
         self.opacity = 255
-        self.mousePos = QPoint(0,0)
+        #self.mousePos = QPoint(0,0)
+        #self.click = False
         self.lastMousePos = QPoint(0,0)
 
     def _RGBSpectrum(self):
@@ -173,27 +173,17 @@ class RGBSpectrumWidget(QWidget):
         painter.setOpacity(1)
 
         painter.setPen(QColor(255,255,255))
-        pos = QRect(self.mousePos.x(),self.mousePos.y(),5,5)
+        if self.mouseClicks.left:
+            x = self.mousePos.x()
+            y = self.mousePos.y()
+        else:
+            x = self.mouseReleasePos.x()
+            y = self.mouseReleasePos.y()
+
+        pos = QRect(x,y,5,5)
         painter.drawRect(pos)
 
         painter.end()
-
-        self.getRGB()
-    
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton: 
-            
-            self.mousePos = event.localPos().toPoint()
-            #print(f"Clicked color: {self.getRGB()} at: {self.mousePos}")  # Prints the color in hex format
-
-        self.update()
-    
-    def mouseMoveEvent(self, event):
-        if event.button() == Qt.LeftButton: 
-            
-            self.mousePos = event.localPos().toPoint()
-        self.update()
-        #return super().mouseMoveEvent(event)
 
     def _getColourAtPoint(self,position:QPoint) -> QColor:
         if (position.x() >= 0 and position.x() <= self.width()) and (position.y() >= 0 and position.y() <= self.height()):
@@ -202,9 +192,18 @@ class RGBSpectrumWidget(QWidget):
             colour.setAlpha(self.opacity)
             return colour
 
+    def onMouseMove(self):
+        if self.mouseClicks.left:
+            self.getRGB()
+            print("buh")
+            self.update()
+        
+        
+
     @Slot()
     def getRGB(self) -> QColor:
         if not self.colour or self.mousePos != self.lastMousePos:
+            print("E")
             self.colour = self._getColourAtPoint(self.mousePos)
             #print("COLOUR IS:" + str(self.colour.getRgb()))
             self.colourChanged.emit(self.colour)
