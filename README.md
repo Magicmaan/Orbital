@@ -17,6 +17,12 @@ Orbital is a lightweight and user-friendly pixel art editor written in Python. D
 - **Export Options:** Export your artwork to popular image formats like PNG and GIF.
 - **Keyboard Shortcuts:** Enhanced productivity with keyboard shortcuts for common actions.
 
+- isometric generator
+- normal maps
+- palette
+- different colour modes
+- image manipulation
+
 ## Installation
 
 ### Prerequisites
