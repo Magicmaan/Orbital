@@ -90,10 +90,12 @@ class Viewport(QWidget):
 
         self.update()
 
+    def getImage(self):
+        return self.canvas.image
 
-    def addLayer(self):
-        pass
-
+    def addImage(self,img):
+        self.canvas.image.load(img)
+        self.canvas.setFixedSize(self.image.size())
 
     def paintCanvas(self,painter):
         canvas = self.canvas.scaleImageToViewport(self._imageScale)

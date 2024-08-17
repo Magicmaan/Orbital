@@ -1,5 +1,5 @@
-from PySide6.QtCore import QSize, Qt
-from PySide6.QtGui import QFontDatabase, QIcon, QPainter, QPixmap
+from PySide6.QtCore import QSize, Qt, QPoint
+from PySide6.QtGui import QFontDatabase, QIcon, QPainter, QPixmap, QRegion
 from PySide6.QtWidgets import (QApplication, QGridLayout, QLabel, QMainWindow,
                                QSizePolicy, QVBoxLayout, QWidget)
 
@@ -40,7 +40,7 @@ class Program(QMainWindow):
         self.setMouseTracking(True)
         self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
 
-        self.minSize = QSize(650,650)
+        self.minSize = QSize(800,600)
         #setup window
         self.setWindowTitle("Orb")
         self.setMinimumSize(self.minSize)  # Minimum size for the window
@@ -63,7 +63,7 @@ class Program(QMainWindow):
         # Custom Frame 
 
         if useCustomWindow:
-            self.window = customWindow(self)
+            self.window = customWindow()
             self.windowContainer = self.window.layout()
         else:
             self.window = defaultWindow(self)
@@ -109,7 +109,7 @@ class Program(QMainWindow):
         centerContainerLayout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
         self.tools = ToolHandler()
-        self.tools.current_tool.target = self.currentTarget.canvas.image
+        self.tools.current_tool.target = self.currentTarget.canvas
 
         self.colourPicker.colorWheel.colourChanged.connect(self.tools.current_tool._updateColour)
 
@@ -133,6 +133,9 @@ class Program(QMainWindow):
         
 
         print("Program Started")
+
+    
+
 
     def setupGUI(self):
         #self = actual program

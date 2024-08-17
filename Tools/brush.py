@@ -30,7 +30,7 @@ class Brush():
 
     def onAction(self, position, painter=None):
         if painter==None:
-            painter = QPainter(self.target)
+            painter = QPainter(self.target.image)
         
         painter.setPen(self.colour)
         painter.drawPoint(position)

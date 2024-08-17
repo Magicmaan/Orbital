@@ -19,7 +19,12 @@ class Canvas(QWidget):
         self.setObjectName("Canvas")
         removePadding(self)
         self.setContentsMargins(0,0,0,0)
-        self.image = QPixmap(filepath)
+
+        if type(filepath) == str:
+            self.image = QPixmap(filepath)
+        elif type(filepath) == QPixmap:
+            self.image = filepath
+
         #self.filepath = filepath
         self.scale = 1
         self._scaleImageCache = None
@@ -32,6 +37,8 @@ class Canvas(QWidget):
 
     def drawRect(self,rect,position):
         pass
+
+
 
 
     def scaleImageToViewport(self,scale):

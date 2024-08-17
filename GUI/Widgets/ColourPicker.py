@@ -172,7 +172,7 @@ class RGBSpectrumWidget(QWidget):
         painter.drawPixmap(0, 0, self._PixmapSpectrum)
         painter.setOpacity(1)
 
-        painter.setPen(QColor(255,255,255))
+        painter.setPen(QColor(255,0,255))
         if self.mouseClicks.left:
             x = self.mousePos.x()
             y = self.mousePos.y()
@@ -180,19 +180,66 @@ class RGBSpectrumWidget(QWidget):
             x = self.mouseReleasePos.x()
             y = self.mouseReleasePos.y()
 
-        pos = QRect(x,y,5,5)
+        pos = QRect(x-2,y-2,4,4)
         painter.drawRect(pos)
 
         painter.end()
 
+    def snaptoCircle(self):
+         # Get the center of the widget
+        center = QPoint(self.width() // 2, self.height() // 2)
+        
+        # Calculate the radius of the circle (assuming a square widget)
+        radius = min(self.width(), self.height()) // 2
+        # Calculate the distance from the center to the position
+        dx = self.mousePos.x() - center.x()
+        dy = self.mousePos.y() - center.y()
+
+        distance_squared = dx ** 2 + dy ** 2
+
+        # If outside the circle, calculate the closest point on the edge of the circle
+        distance = sqrt(distance_squared)
+        scale = radius / distance
+        
+        if distance_squared <= radius ** 2:
+            return
+        
+        # Calculate the closest point on the circle's edge
+        closest_x = center.x() + int(dx * scale)
+        closest_y = center.y() + int(dy * scale)
+        closest_point = QPoint(closest_x, closest_y)
+        
+        self.mousePos = closest_point
+
     def _getColourAtPoint(self,position:QPoint) -> QColor:
-        if (position.x() >= 0 and position.x() <= self.width()) and (position.y() >= 0 and position.y() <= self.height()):
-            pmap = self._PixmapSpectrum
-            colour = pmap.toImage().pixelColor(position)
-            colour.setAlpha(self.opacity)
-            return colour
+        # Get the center of the widget
+        center = QPoint(self.width() // 2, self.height() // 2)
+        
+        # Calculate the radius of the circle (assuming a square widget)
+        radius = min(self.width(), self.height()) // 2
+        # Calculate the distance from the center to the position
+        dx = position.x() - center.x()
+        dy = position.y() - center.y()
+        distance_squared = dx ** 2 + dy ** 2
+        
+        pos = position
+        # Check if the position is within the circle
+        if distance_squared <= radius ** 2:
+            pos = position
+        else:
+            pos = self.snaptoCircle()
+        
+        pmap = self._PixmapSpectrum
+        colour = pmap.toImage().pixelColor(pos)
+        colour.setAlpha(self.opacity)
+        return colour
+
+    def onMouseClick(self):
+        self.snaptoCircle()
 
     def onMouseMove(self):
+        self.snaptoCircle()
+
         if self.mouseClicks.left:
             self.getRGB()
             print("buh")
@@ -208,6 +255,7 @@ class RGBSpectrumWidget(QWidget):
             #print("COLOUR IS:" + str(self.colour.getRgb()))
             self.colourChanged.emit(self.colour)
             self.backgroundFill = self.colour
+            
         return self.colour
         
     def setSize(self,squareSize:int):   

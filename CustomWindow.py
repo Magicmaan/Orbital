@@ -9,6 +9,8 @@ from Utils import *
 
 from GUI.Decorators import PixelBorder, sizePolicy
 
+
+#custom event filter to catch events in entire window
 class MouseEventFilter(QObject):
     def __init__(self, custom_window):
         super().__init__()
@@ -30,9 +32,9 @@ class MouseEventFilter(QObject):
 
 @PixelBorder
 class customWindow(QWidget):
-    def __init__(self, parent: QMainWindow):
+    def __init__(self, parent: QMainWindow=None):
         super().__init__(parent)
-        self.parent = parent
+        self.parent = QApplication.instance().program
         #setup widget
         self.setObjectName("customWindow")
         self.resize(self.parent.size())
@@ -159,6 +161,8 @@ class customWindow(QWidget):
             cursor.setShape(Qt.SizeVerCursor)
 
         self.setCursor(cursor)
+
+    
 
     def mouseDoubleClickEvent(self, event):
         if event.button() == Qt.LeftButton:
