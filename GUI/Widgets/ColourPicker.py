@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QApplication, QWidget, QSizePolicy, QVBoxLayout, QSlider, QLabel
+from PySide6.QtWidgets import QApplication, QWidget, QSizePolicy, QVBoxLayout, QSlider, QLabel, QHBoxLayout
 from PySide6.QtGui import QMouseEvent, QPainter, QColor, QPixmap, qRgb
 from PySide6.QtCore import Qt, QPoint, QRect, Signal, Slot
 
@@ -27,7 +27,7 @@ from GUI.Decorators import PixelBorder, sizePolicy, mouseClick
  
 
 
-
+@PixelBorder
 class ColourPicker(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -47,16 +47,24 @@ class ColourPicker(QWidget):
         self.setLayout(QVBoxLayout())
         self.layout().addWidget(self.colorWheel)
         self.layout().addWidget(self.opacitySlider)
-
+        self.layout().setSpacing(0)
+        self.layout().setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.layout().setContentsMargins(10,10,10,10)
         self.opacitySlider.valueChanged.connect(self._updateAlpha)
+
+
+        sliderscontainer = QWidget()
+        sliderscontainer.setLayout(QHBoxLayout())
+        sliderscontainer.setFixedHeight(100)
+        self.layout().addWidget(sliderscontainer)
+        sliderscontainer.layout().setSpacing(10)
+
         self.redlabel = QLabel("0")
-        self.layout().addWidget(self.redlabel)
-
+        sliderscontainer.layout().addWidget(self.redlabel)
         self.greenlabel = QLabel("0")
-        self.layout().addWidget(self.greenlabel)
-
+        sliderscontainer.layout().addWidget(self.greenlabel)
         self.bluelabel = QLabel("0")
-        self.layout().addWidget(self.bluelabel)
+        sliderscontainer.layout().addWidget(self.bluelabel)
         
         self.colorWheel.colourChanged_S.connect(self._updateColour)
 
@@ -89,6 +97,7 @@ class ColourPicker(QWidget):
     
     def _updateAlpha(self, value):
         self.colorWheel.opacity = value
+        self.update()
 
 
 
