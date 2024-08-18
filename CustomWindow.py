@@ -65,7 +65,7 @@ class customWindow(QWidget):
 
         # Variables for resizing
         self.dragging = False
-        self.dragging_pos = QPoint()
+        self.mousePressPos = QPoint()
         self.resize_edge_size = 5  # Width of the area where resizing is possible
         self.lastResize = -1
 
@@ -80,21 +80,22 @@ class customWindow(QWidget):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
-            self.mouseoffset = self.parent.mapFromGlobal(event.globalPos())
+            self.mousePressPos = self.parent.mapFromGlobal(event.globalPos())
             self.dragging = True
 
     def mouseMoveEvent(self, event):
         tbar = self.titlebar
         pos = tbar.mapFromGlobal(event.globalPos())
         sideHit = self._detectEdge(pos)
-
-        if tbar.rect().contains(pos) and self.dragging and self.lastResize == (-1) :
+        if tbar.rect().contains(pos) and tbar.rect().contains(self.mousePressPos) and self.dragging and self.lastResize == (-1):
             self.customDrag(event,sideHit)
             
-        elif self.dragging:
+        elif self.dragging and (any(self._detectEdge(self.mousePressPos)) or self.lastResize!=-1):
             self.customResize(event,sideHit)
         
     def customResize(self,event,sideHit):
+        if self.isMaximised():
+            return
 
         self._updateCursor(sideHit)
 
@@ -121,15 +122,28 @@ class customWindow(QWidget):
                 self.parent.move(self.parent.pos().x(), event.globalPos().y())
                 self.lastResize = 2
 
-
     def customDrag(self,event,sideHit):
+        if self.isMaximised():
+            self.toggleMaximiseWindow()
 
         self._updateCursor(sideHit)
 
         windowPos = self.parent.pos()
-        self.parent.move(event.globalPos() - self.mouseoffset)
+        self.parent.move(event.globalPos() - self.mousePressPos)
 
         self.lastResize = -1
+
+    def toggleMaximiseWindow(self):
+        if self.isMaximised():
+            self.parent.setWindowState(self.parent.windowState() ^ Qt.WindowState.WindowNoState)
+            self.parent.setFixedSize(QSize(500,500))
+        else:
+            self.parent.setWindowState(self.parent.windowState() ^ Qt.WindowState.WindowMaximized)
+    
+    def isMaximised(self):
+        if self.parent.windowState() == Qt.WindowState.WindowMaximized:
+            return True
+        return False
 
     def mouseReleaseEvent(self, event):
         self.dragging = False

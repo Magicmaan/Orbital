@@ -58,7 +58,7 @@ class Titlebar(QWidget):
         
 
         #maximise button
-        self.maximiseBtn = self.addButton("MaximiseButton",lambda:self.appWindow.parent.setWindowState(self.appWindow.parent.windowState() ^ Qt.WindowFullScreen),"Resources/icons/maximise.png",self.icon_size)
+        self.maximiseBtn = self.addButton("MaximiseButton",self.appWindow.parent.setWindowState(self.appWindow.parent.windowState() ^ Qt.WindowFullScreen),"Resources/icons/maximise.png",self.icon_size)
         self.layout().addWidget(self.maximiseBtn)
 
         #close app

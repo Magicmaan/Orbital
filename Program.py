@@ -134,7 +134,7 @@ class Program(QMainWindow):
 
         print("Program Started")
 
-    
+        print(self.windowState())
 
 
     def setupGUI(self):

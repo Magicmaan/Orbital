@@ -7,6 +7,24 @@ from math import sqrt, atan2, sin, cos, tan, degrees, radians
 from GUI.Decorators import PixelBorder, sizePolicy, mouseClick
 
 
+#RGBSpectrumWidget
+ #multiple modes HSV,HSl etc
+ #will change with opacity
+ #show complementary colour on wheel
+
+
+#colour sliders
+ #Opacity, red, green, blue, value
+ #draggable sliders to change
+ #don't display value unless alt hold
+ #will show percentage, and hue change as background
+
+ #step factor to change how much sliders will change by
+
+#colour selector
+ #hold alt to choose
+ #will show preview on colour picker
+ 
 
 
 

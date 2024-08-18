@@ -61,7 +61,6 @@ def PixelBorder(cls):
 
 
 def mouseClick(cls):
-
     # Add mouse tracking attributes
     if not hasattr(cls, 'mouseClicks'):
         cls.mouseClicks = DotDict(
