@@ -3,7 +3,7 @@ import sys
 from os.path import exists
 from math import log, exp
 
-from PySide6.QtCore import QPoint, QRect, QSize, Qt
+from PySide6.QtCore import QPoint, QRect, QSize, QTimerEvent, Signal, Slot, Qt
 from PySide6.QtGui import QPainter, QPixmap, QWheelEvent, QColor
 from PySide6.QtWidgets import QLabel, QSizePolicy, QVBoxLayout, QWidget, QScrollBar, QGridLayout, QSlider, QApplication
 
@@ -12,6 +12,8 @@ from GUI.Widgets.WidgetUtils import drawPixelBorder, removePadding
 from GUI.Widgets.ScrollBar import CustomScrollBar
 from GUI.Widgets.Canvas import Canvas
 from Utils import clamp
+
+from GUI.Widgets.customEvents import *
 
 from GUI.Decorators import PixelBorder, sizePolicy, mouseClick
 DEFAULT_IMG = "Resources/default_canvas.png"
@@ -22,6 +24,9 @@ DEFAULT_IMG = "Resources/default_canvas.png"
 @PixelBorder
 @mouseClick
 class Viewport(QWidget):
+    toolClick = Signal(toolClickEvent)
+
+
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         
@@ -31,6 +36,8 @@ class Viewport(QWidget):
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         self.program = QApplication.instance().program
+
+        self.toolClick.connect(self.program.tools.toolAction)
 
         #image scaling and position
         self.imageScaleRange = (0.25, 50)
@@ -51,6 +58,7 @@ class Viewport(QWidget):
         self.dragging = False
 
         self.cursorPos = QPoint(0,0)
+        self.lastcursorPos = QPoint(0,0)
         self.snapCursor = False
 
         self.pixmap = QPixmap(self.fixed_size)
@@ -109,8 +117,8 @@ class Viewport(QWidget):
 
         img_pos = self._imagePosition
         img_scale = self._imageScale
-
-        self.cursorPos = self._mapToCanvas(self.mousePos)
+        
+        
         # Bounds check of canvas and draw the square if within bounds
         if (0 <= self.cursorPos.x() < self.canvas.width()) and (0 <= self.cursorPos.y() < self.canvas.height()):
 
@@ -184,10 +192,18 @@ class Viewport(QWidget):
         return QPoint(int(viewport_x), int(viewport_y))
 
     def paintpix(self):
-        self.program.tools.onAction(self.cursorPos)
+        custom_data = toolClickEvent(self.cursorPos,self.lastcursorPos,self.canvas.image)
+
+        print(custom_data)
+
+        self.toolClick.emit(custom_data)
+        #self.program.tools.onAction(self.cursorPos)
 
     def onMouseClick(self):
         if self.mouseClicks.left:
+            self.lastcursorPos = self._mapToCanvas(self.mousePos)
+            self.cursorPos = self._mapToCanvas(self.mousePos)
+
             self.paintpix()
 
         if self.mouseClicks.right:
@@ -199,6 +215,9 @@ class Viewport(QWidget):
 
     def onMouseMove(self):
         if self.mouseClicks.left:
+            self.lastcursorPos = self.cursorPos
+            self.cursorPos = self._mapToCanvas(self.mousePos)
+
             self.paintpix()
         
         if self.mouseClicks.middle:

@@ -32,8 +32,12 @@ class Canvas(QWidget):
         self.setFixedSize(self.image.size())
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
-    def drawPixel(self,pixel,position):
-        pass
+    def drawPixel(self,position,prevposition,colour):
+        painter = QPainter(self.image)
+        
+        painter.setPen(self.colour)
+        painter.drawLine(position,prevposition)
+        painter.end()
 
     def drawRect(self,rect,position):
         pass

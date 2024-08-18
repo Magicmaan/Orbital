@@ -110,6 +110,8 @@ class RGBSpectrumWidget(QWidget):
         self._displayModes = (self._RGBSpectrum, self._HSVSpectrum, self._HSLSpectrum, self._CMYKSpectrum)#
         self.currentDisplayMode = self._displayModes[1]
 
+        self.colourChanged.connect(QApplication.instance().program.tools.current_tool._updateColour)
+
         self.colour = None
         self.opacity = 255
         #self.mousePos = QPoint(0,0)
@@ -260,7 +262,6 @@ class RGBSpectrumWidget(QWidget):
 
         if self.mouseClicks.left:
             self.getRGB()
-            print("buh")
             self.update()
         
         
@@ -268,7 +269,6 @@ class RGBSpectrumWidget(QWidget):
     @Slot()
     def getRGB(self) -> QColor:
         if not self.colour or self.mousePos != self.lastMousePos:
-            print("E")
             self.colour = self._getColourAtPoint(self.mousePos)
             #print("COLOUR IS:" + str(self.colour.getRgb()))
             self.colourChanged.emit(self.colour)

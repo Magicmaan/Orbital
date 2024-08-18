@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QLabel, QSizePolicy, QVBoxLayout, QWidget, QHBoxLa
 class paintPixelEvent:
     def __init__(self,pixelCoord:QPoint,pixelColour:QColor,canvasImg:QPixmap) -> None:
         self.position = pixelCoord
-
+        
         self.previousPixel = None
         self.pixel = pixelColour
 

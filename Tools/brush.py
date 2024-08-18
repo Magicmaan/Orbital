@@ -5,6 +5,7 @@ from PySide6.QtWidgets import (QHBoxLayout, QLabel, QPushButton, QSizePolicy,
 
 from Utils import DotDict
 from GUI.Decorators import PixelBorder, sizePolicy, mouseClick
+from GUI.Widgets.customEvents import *
 
 
 class Brush():
@@ -28,16 +29,15 @@ class Brush():
     def setProperties(self,properties:dict):
         self.properties = properties
 
-    def onAction(self, position, painter=None):
-        if painter==None:
-            painter = QPainter(self.target.image)
+    def onAction(self, value: toolClickEvent):
+        painter = QPainter(value.target)
         
         painter.setPen(self.colour)
-        painter.drawPoint(position)
+        painter.drawLine(value.position, value.prevposition)
+
         painter.end()
     
+
     @Slot(QColor)
     def _updateColour(self, value:QColor):
-        print(value)
-        print("Brush received colourUpdate")
         self.colour = value

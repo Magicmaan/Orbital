@@ -69,6 +69,7 @@ class Program(QMainWindow):
             self.window = defaultWindow(self)
             self.windowContainer = self.window.layout()
 
+        self.tools = ToolHandler()
 
         self.contextBar = Contextbar()
         self.windowContainer.addWidget(self.contextBar)
@@ -99,6 +100,8 @@ class Program(QMainWindow):
         centerContainerLayout.addWidget(Toolbar(),0,1)
         
         
+        
+
         #Create and configure the Canvas widget
         self.canvas = Viewport()
         self.currentTarget = self.canvas
@@ -107,11 +110,6 @@ class Program(QMainWindow):
         centerContainerLayout.addWidget(self.canvas,1,1)
         
         centerContainerLayout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        
-        self.tools = ToolHandler()
-        self.tools.current_tool.target = self.currentTarget.canvas
-
-        self.colourPicker.colorWheel.colourChanged.connect(self.tools.current_tool._updateColour)
 
         RightBar = pixelWidget()
         RightBar.setFixedWidth(25)
@@ -134,7 +132,6 @@ class Program(QMainWindow):
 
         print("Program Started")
 
-        print(self.windowState())
 
 
     def setupGUI(self):

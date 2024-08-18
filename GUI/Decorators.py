@@ -77,7 +77,7 @@ def mouseClick(cls):
         cls.mouseReleasePos = QPoint(0,0)
 
     if not hasattr(cls, 'mouseHistory'):
-        cls._mouseHistory = False
+        cls.lastMousePos = QPoint(0,0)
     
     #original event
     original_mouse_press_event = cls.mousePressEvent
@@ -106,6 +106,8 @@ def mouseClick(cls):
     
     def customMouseMoveEvent(self, event):
         #if self.hasMouseTracking():
+        self.lastMousePos = self.mousePos
+
         self.mousePos = event.position().toPoint()
         
         if hasattr(self,"onMouseMove"):
