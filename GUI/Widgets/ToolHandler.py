@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (QHBoxLayout, QLabel, QPushButton, QSizePolicy,
 
 from GUI.Widgets.WidgetUtils import drawPixelBorder, removePadding
 
-from GUI.Widgets.customEvents import *
+from GUI.customEvents import *
 
 from GUI.Decorators import PixelBorder, sizePolicy
 from Tools.brush import Brush

@@ -11,3 +11,10 @@ class toolClickEvent:
     
     def __str__(self):
         return f"ToolClickEvent: (pos={self.position.x(), self.position.y()},pre={self.prevposition.x(), self.prevposition.y()})"
+
+class openFileCustEvent:
+    def __init__(self,filepath:str) -> None:
+        self.file = filepath
+    
+    def __str__(self):
+        return f"openFileEvent: (file={self.file})"

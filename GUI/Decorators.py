@@ -107,7 +107,6 @@ def mouseClick(cls):
     def customMouseMoveEvent(self, event):
         #if self.hasMouseTracking():
         self.lastMousePos = self.mousePos
-
         self.mousePos = event.position().toPoint()
         
         if hasattr(self,"onMouseMove"):

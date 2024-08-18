@@ -1,15 +1,18 @@
-from PySide6.QtCore import QSize, Qt
+from PySide6.QtCore import QSize, Qt, Signal
 from PySide6.QtGui import QCursor, QIcon, QPainter, QPixmap, QTransform, QAction
 from PySide6.QtWidgets import (QHBoxLayout, QLabel, QPushButton, QSizePolicy,
                                QWidget,QMenuBar,QMenu,QApplication)
 
 from GUI.Widgets.WidgetUtils import drawPixelBorder, removePadding
 from GUI.Decorators import PixelBorder, sizePolicy
+from GUI.customEvents import *
 
 
 @PixelBorder
 
 class Contextbar(QMenuBar):
+    openFile_S = Signal(openFileCustEvent)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName("Contextbar")
@@ -23,6 +26,7 @@ class Contextbar(QMenuBar):
         self.layout().setAlignment(Qt.AlignmentFlag.AlignLeft)
         removePadding(self)
 
+        
         self.setStyleSheet(
             "background:transparent;"
         )
@@ -34,8 +38,9 @@ class Contextbar(QMenuBar):
         self.setupUi()
 
     def newFile(self):
-        print("New File")
-        self.program.canvas.addImage("resources/test.png")
+        self.openFile_S.connect(self.program.canvas.openFile)
+        print("Opening File")
+        self.openFile_S.emit(openFileCustEvent("resources/test.png"))
 
     def setupUi(self):
         self.fileMenu = QMenu("File")

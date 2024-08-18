@@ -13,7 +13,7 @@ from GUI.Widgets.ScrollBar import CustomScrollBar
 from GUI.Widgets.Canvas import Canvas
 from Utils import clamp
 
-from GUI.Widgets.customEvents import *
+from GUI.customEvents import *
 
 from GUI.Decorators import PixelBorder, sizePolicy, mouseClick
 DEFAULT_IMG = "Resources/default_canvas.png"
@@ -24,7 +24,7 @@ DEFAULT_IMG = "Resources/default_canvas.png"
 @PixelBorder
 @mouseClick
 class Viewport(QWidget):
-    toolClick = Signal(toolClickEvent)
+    toolClick_S = Signal(toolClickEvent)
 
 
     def __init__(self, parent=None) -> None:
@@ -37,7 +37,7 @@ class Viewport(QWidget):
 
         self.program = QApplication.instance().program
 
-        self.toolClick.connect(self.program.tools.toolAction)
+        self.toolClick_S.connect(self.program.tools.toolAction)
 
         #image scaling and position
         self.imageScaleRange = (0.25, 50)
@@ -103,7 +103,7 @@ class Viewport(QWidget):
 
     def addImage(self,img):
         self.canvas.image.load(img)
-        self.canvas.setFixedSize(self.image.size())
+        self.canvas.setFixedSize(self.canvas.image.size())
 
     def paintCanvas(self,painter):
         canvas = self.canvas.scaleImageToViewport(self._imageScale)
@@ -194,10 +194,12 @@ class Viewport(QWidget):
     def paintpix(self):
         custom_data = toolClickEvent(self.cursorPos,self.lastcursorPos,self.canvas.image)
 
-        print(custom_data)
-
-        self.toolClick.emit(custom_data)
+        self.toolClick_S.emit(custom_data)
         #self.program.tools.onAction(self.cursorPos)
+
+    @Slot(openFileCustEvent)
+    def openFile(self, value:openFileCustEvent):
+        self.addImage(value.file)
 
     def onMouseClick(self):
         if self.mouseClicks.left:
@@ -212,19 +214,20 @@ class Viewport(QWidget):
         if self.mouseClicks.middle:
             self.offset = self._imagePosition - self.mousePressPos
             self.moveCanvas(self.mousePos + self.offset)
+        
+        self.update()
 
     def onMouseMove(self):
-        if self.mouseClicks.left:
-            self.lastcursorPos = self.cursorPos
-            self.cursorPos = self._mapToCanvas(self.mousePos)
+        self.lastcursorPos = self.cursorPos
+        self.cursorPos = self._mapToCanvas(self.mousePos)
 
+        if self.mouseClicks.left:
             self.paintpix()
         
         if self.mouseClicks.middle:
             self.moveCanvas(self.mousePos + self.offset)
 
         self.update()
-        print("Buh")
 
     '''def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:

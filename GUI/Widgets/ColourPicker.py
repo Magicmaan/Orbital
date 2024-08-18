@@ -58,7 +58,7 @@ class ColourPicker(QWidget):
         self.bluelabel = QLabel("0")
         self.layout().addWidget(self.bluelabel)
         
-        self.colorWheel.colourChanged.connect(self._updateColour)
+        self.colorWheel.colourChanged_S.connect(self._updateColour)
 
 
     def getOpacity(self) -> int:
@@ -96,7 +96,7 @@ class ColourPicker(QWidget):
 @PixelBorder
 @mouseClick
 class RGBSpectrumWidget(QWidget):
-    colourChanged = Signal(QColor)
+    colourChanged_S = Signal(QColor)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -110,7 +110,7 @@ class RGBSpectrumWidget(QWidget):
         self._displayModes = (self._RGBSpectrum, self._HSVSpectrum, self._HSLSpectrum, self._CMYKSpectrum)#
         self.currentDisplayMode = self._displayModes[1]
 
-        self.colourChanged.connect(QApplication.instance().program.tools.current_tool._updateColour)
+        self.colourChanged_S.connect(QApplication.instance().program.tools.current_tool._updateColour)
 
         self.colour = None
         self.opacity = 255
@@ -271,7 +271,7 @@ class RGBSpectrumWidget(QWidget):
         if not self.colour or self.mousePos != self.lastMousePos:
             self.colour = self._getColourAtPoint(self.mousePos)
             #print("COLOUR IS:" + str(self.colour.getRgb()))
-            self.colourChanged.emit(self.colour)
+            self.colourChanged_S.emit(self.colour)
             self.backgroundFill = self.colour
             
         return self.colour

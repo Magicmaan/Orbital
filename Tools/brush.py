@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (QHBoxLayout, QLabel, QPushButton, QSizePolicy,
 
 from Utils import DotDict
 from GUI.Decorators import PixelBorder, sizePolicy, mouseClick
-from GUI.Widgets.customEvents import *
+from GUI.customEvents import *
 
 
 class Brush():
