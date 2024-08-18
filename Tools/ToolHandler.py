@@ -8,7 +8,8 @@ from GUI.Widgets.WidgetUtils import drawPixelBorder, removePadding
 from GUI.customEvents import *
 
 from GUI.Decorators import PixelBorder, sizePolicy
-from Tools.brush import Brush
+from Tools.brush import BrushTool
+from Tools.select import SelectTool
 from Utils import DotDict
 
 
@@ -18,12 +19,13 @@ class ToolHandler(QWidget):
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         #contains tool selection
-        self.brush = Brush()
+        self.brush = BrushTool()
+        self.select = SelectTool()
 
         #indidividual tool config (size, colour, selection etc etc)
         self.tool_config = DotDict()
 
-        self.current_tool = self.brush
+        self.current_tool = self.select
     
     def onAction(self, position, painter=None):
         self.current_tool.onAction(position, painter)

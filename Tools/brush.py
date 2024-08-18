@@ -8,10 +8,10 @@ from GUI.Decorators import PixelBorder, sizePolicy, mouseClick
 from GUI.customEvents import *
 
 
-class Brush():
+class BrushTool():
     def __init__(self) -> None:
         self.defaultProperties = DotDict(
-            colour=QColor(0, 0, 0),
+            colour=QColor(255,255,255),
             size=1,
             brush=0
         )
@@ -19,7 +19,6 @@ class Brush():
 
         self.target = None
         self.properties = self.defaultProperties
-        self.colour = QColor(255,255,255,255)
 
 
     def setTarget(self,target:QPaintDevice):
@@ -32,12 +31,13 @@ class Brush():
     def onAction(self, value: toolClickEvent):
         painter = QPainter(value.target)
         
-        painter.setPen(self.colour)
+        painter.setPen(self.properties.colour)
         painter.drawLine(value.position, value.prevposition)
+
 
         painter.end()
     
 
     @Slot(QColor)
     def _updateColour(self, value:QColor):
-        self.colour = value
+        self.properties.colour = value

@@ -180,10 +180,13 @@ class customWindow(QWidget):
 
     def mouseDoubleClickEvent(self, event):
         if event.button() == Qt.LeftButton:
-            if self.parent.isMaximized():
-                self.parent.showNormal()
-            else:
-                self.parent.showMaximized()
+            tbar = self.titlebar
+            pos = tbar.mapFromGlobal(event.globalPos())
+            if tbar.rect().contains(pos)and self.lastResize == (-1):
+                if self.parent.isMaximized():
+                    self.parent.showNormal()
+                else:
+                    self.parent.showMaximized()
     
     
 

@@ -8,7 +8,7 @@ from DiscordPresence import *
 from GUI.Widgets.CanvasWindow import Viewport
 from GUI.Widgets.Toolbar import Toolbar
 from GUI.Widgets.Contextbar import Contextbar
-from GUI.Widgets.ToolHandler import ToolHandler
+from Tools.ToolHandler import ToolHandler
 from GUI.Widgets.ColourPicker import ColourPicker
 from GUI.Widgets.WidgetUtils import drawPixelBorder, removePadding
 from Utils import getFont
