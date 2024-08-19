@@ -1,10 +1,10 @@
 
 import sys
 from os.path import exists
-from math import log, exp
+from math import log, exp, floor
 
 from PySide6.QtCore import QPoint, QRect, QSize, QTimerEvent, Signal, Slot, Qt
-from PySide6.QtGui import QPainter, QPixmap, QWheelEvent, QColor
+from PySide6.QtGui import QPainter, QPixmap, QWheelEvent, QColor, QFont, QPen
 from PySide6.QtWidgets import QLabel, QSizePolicy, QVBoxLayout, QWidget, QScrollBar, QGridLayout, QSlider, QApplication
 
 from DialogBox import ErrorDialog, SuccessDialog
@@ -25,6 +25,7 @@ DEFAULT_IMG = "Resources/default_canvas.png"
 @mouseClick
 class Viewport(QWidget):
     toolClick_S = Signal(toolClickEvent)
+    toolRelease_S = Signal(toolReleaseEvent)
 
 
     def __init__(self, parent=None) -> None:
@@ -38,6 +39,7 @@ class Viewport(QWidget):
         self.program = QApplication.instance().program
 
         self.toolClick_S.connect(self.program.tools.toolAction)
+        self.toolRelease_S.connect(self.program.tools.toolReleaseAction)
 
         #image scaling and position
         self.imageScaleRange = (0.25, 50)
@@ -130,14 +132,71 @@ class Viewport(QWidget):
             ))
 
     def paintViewport(self,painter):
-        pass
+        painter.save()
+        painter.setPen(QColor(255, 255, 255,125))  # Set the pen color to white
+
+        #draw image size
+        xPos,yPos = self._imagePosition.x(), self._imagePosition.y()
+        font = QFont("pixelated", 16)  # You can specify the font family, size, and weight
+        painter.setFont(font)
+
+        painter.drawText(xPos-20-(self._imageScale*2),yPos-10-(self._imageScale*2), "X")
+        
+        painter.drawText(xPos,yPos-10-(self._imageScale*2), str(self.canvas.image.width()))
+
+        painter.rotate(-90)
+        painter.drawText(-yPos-30,xPos-10-(self._imageScale*2), str(self.canvas.image.height()))
+        painter.rotate(90)
+
+        #draw filepath
+        painter.drawText(xPos,yPos+20+(self.canvas.height()*self._imageScale), self.canvas.filepath)
+
+        pen = QPen()
+        pen.setColor(QColor(255, 255, 255, 125))  # Set the pen color to white
+        pen.setWidth(self._imageScale)  # Set the desired line width
+        painter.setPen(pen)
+
+        topAxisY = floor(yPos - (self._imageScale * 1.5)) - 5
+        # Horizontal line
+        painter.drawLine(xPos + (self._imageScale / 2),
+                        topAxisY,
+                        xPos + (self.canvas.width() * self._imageScale) - (self._imageScale / 2),
+                        topAxisY)
+
+        # Measure dot X center
+        centreDotX = xPos + ((self.canvas.width() * self._imageScale) / 2)
+
+        painter.drawPoint(centreDotX, floor(topAxisY + (self._imageScale)))
+        '''painter.drawDot(centreDotX,
+                        topAxisY + (self._imageScale),
+                        centreDotX,
+                        topAxisY + self._imageScale)'''
+
+        # Calculate the position for the left Y-axis
+        leftAxisX = floor(xPos - (self._imageScale * 1.5)) - 5
+        # Vertical line
+        painter.drawLine(leftAxisX,
+                        yPos + (self._imageScale / 2),
+                        leftAxisX,
+                        yPos + (self.canvas.height() * self._imageScale) - (self._imageScale / 2))
+
+        # Measure dot Y center
+        centreDotY = yPos + ((self.canvas.height() * self._imageScale) / 2)
+        painter.drawPoint(leftAxisX + (self._imageScale), centreDotY)
+
+        painter.restore()   
+
 
     def paintEvent(self, event):
         painter = QPainter(self)
-
+        
         self.paintCanvas(painter)
 
         self.paintPixelPosition(painter)
+
+        self.paintViewport(painter)
+        
+        
 
         super().paintEvent(event)
 
@@ -228,6 +287,11 @@ class Viewport(QWidget):
             self.moveCanvas(self.mousePos + self.offset)
 
         self.update()
+    
+    def onMouseRelease(self):
+        custom_data = toolClickEvent(self.cursorPos,self._mapToCanvas(self.mousePressPos),self.canvas.image)
+
+        self.toolRelease_S.emit(custom_data)
 
     '''def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:

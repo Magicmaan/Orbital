@@ -16,7 +16,7 @@ if __name__ == "__main__":
     window = Program(useCustomWindow=True)
 
     # Set the application-wide font
-    font = QFont("Minecraft", 14)  # You can specify the font family, size, and weight
+    font = QFont("mai10", 14)  # You can specify the font family, size, and weight
     app.setFont(font)
 
     window.show()

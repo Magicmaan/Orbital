@@ -34,3 +34,7 @@ class ToolHandler(QWidget):
     def toolAction(self, value:toolClickEvent):
         self.current_tool.onAction(value)
     
+    @Slot(toolReleaseEvent)
+    def toolReleaseAction(self, value:toolReleaseEvent):
+        self.current_tool.onActionRelease(value)
+    

@@ -17,6 +17,7 @@ class SelectTool(QObject):
             brush=0
         )
 
+        self.selectorRect = QRect(0,0,1,1)
         self.offset = 0
 
         self.target = None
@@ -42,9 +43,10 @@ class SelectTool(QObject):
         self.properties = properties
 
     def onAction(self, value: toolClickEvent):
+        return
         painter = QPainter(value.target)
         
-        outline = QRect(5,5,20,20)
+        outline = self.selectorRect
 
         pen = QPen(QColor("black"))
         pen.setStyle(Qt.DotLine)
@@ -55,6 +57,22 @@ class SelectTool(QObject):
 
         # Draw the rectangle with the dotted border
         painter.drawRect(outline)
+
+        painter.end()
+    
+    def onActionRelease(self,value:toolReleaseEvent):
+        self.selectorRect.adjust(value.startposition.x(),value.startposition.x(),value.position.x(),value.position.y())
+
+        painter = QPainter(value.target)
+        pen = QPen(QColor("black"))
+        pen.setStyle(Qt.DotLine)
+        pen.setWidth(1)
+        pen.setDashPattern([1, 1])
+        pen.setDashOffset(self.offset)
+        painter.setPen(pen)
+
+        # Draw the rectangle with the dotted border
+        painter.drawRect(self.selectorRect)
 
         painter.end()
     

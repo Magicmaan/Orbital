@@ -13,6 +13,15 @@ class toolClickEvent:
         return f"ToolClickEvent: (pos={self.position.x(), self.position.y()},pre={self.prevposition.x(), self.prevposition.y()})"
 
 class toolReleaseEvent:
+    def __init__(self,position,startposition,targetImage) -> None:
+        self.position = position
+        self.startposition = startposition
+        self.target = targetImage
+    
+    def __str__(self) -> str:
+        return f"ToolReleaseEvent: (pos={self.position.x(), self.position.y()},start={self.startposition.x(), self.startposition.y()})"
+
+class toolReleaseEvent:
     def __init__(self,position:QPoint,prevposition:QPoint,targetImage:QPixmap) -> None:
         self.position = position
         self.target = targetImage

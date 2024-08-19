@@ -49,7 +49,11 @@ class Program(QMainWindow):
         removePadding(self)
         
         #set custom font
-        font_Path = "Resources/fonts/minecraft_font.ttf"
+        font_Path = "Resources/fonts/pixelated.ttf"
+        self.setCustFont(font_Path,8)
+
+        #set custom font
+        font_Path = "Resources/fonts/mai10.ttf"
         self.setCustFont(font_Path,8)
         
         

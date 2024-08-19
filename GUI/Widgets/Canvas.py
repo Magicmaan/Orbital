@@ -20,6 +20,8 @@ class Canvas(QWidget):
         removePadding(self)
         self.setContentsMargins(0,0,0,0)
 
+        self.filepath = filepath
+
         if type(filepath) == str:
             self.image = QPixmap(filepath)
         elif type(filepath) == QPixmap:
