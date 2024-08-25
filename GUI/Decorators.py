@@ -41,10 +41,11 @@ def PixelBorder(cls):
         if not self._pixelBorderCache:
             self._generatePixelBorder()
 
+        painter.fillRect(self.rect(),QColor(255,255,255,0))
         # Draw the pixmap using the mask
         painter.drawPixmap(QPoint(0, 0), self._pixelBorderCache)
 
-
+        painter.end()
         # Call the original paintEvent
         original_paint_event(self, event)
 

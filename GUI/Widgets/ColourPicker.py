@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QApplication, QWidget, QSizePolicy, QVBoxLayout, QSlider, QLabel, QHBoxLayout
-from PySide6.QtGui import QMouseEvent, QPainter, QColor, QPixmap, qRgb, QPen, QFont
+from PySide6.QtGui import QMouseEvent, QPainter, QColor, QPixmap, qRgb, QPen, QFont, QCursor
 from PySide6.QtCore import Qt, QPoint, QRect, Signal, Slot
 
 from math import sqrt, atan2, sin, cos, tan, degrees, radians
@@ -25,7 +25,64 @@ from GUI.Decorators import PixelBorder, sizePolicy, mouseClick
  #hold alt to choose
  #will show preview on colour picker
  
+@PixelBorder
+@mouseClick
+class RGBSlider(QWidget):
+    def __init__(self, parent):
+        super().__init__()
+        self.parent = parent
 
+        self.setSizePolicy(QSizePolicy.Minimum,QSizePolicy.Minimum)
+        self.setFixedWidth(50)
+        self.setFixedHeight(20)
+        self.setContentsMargins(0,0,0,0)
+        
+        self.setStyleSheet("background-color: none;")
+        self.label = QLabel("0")
+        self.setLayout(QVBoxLayout())
+        self.layout().addWidget(self.label)
+        self.layout().setSpacing(0)
+        self.layout().setContentsMargins(0,0,0,0)
+        self.layout().setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label.setFont(QFont("pixelated", 12))
+
+        self.value = 0
+        self.toAdd = 0
+    def onMouseclick(self):
+        QCursor.setPos(self.mapToGlobal(self.rect().center()))
+        self.update()
+
+    def onMouseMove(self):
+        if self.mouseClicks.left:
+            #self.setCursor(Qt.BlankCursor)
+            toAdd = (self.mousePos.x() - self.mousePressPos.x()) / 40
+            if self.mousePos.x() < 0 or self.mousePos.x() > self.width():
+                QCursor.setPos(self.mapToGlobal(QPoint(self.width()/2,self.mousePos.y())))
+
+            self.toAdd += toAdd 
+
+            if self.toAdd > 255:
+                self.toAdd = 255
+            if self.toAdd < -255:
+                self.toAdd = -255
+        
+        self.label.setText(f"{self.toAdd:+}")
+        self.update()
+    
+    def onMouseRelease(self):
+        self.value += int(self.toAdd)
+        if self.value < 0:
+            self.value = 0
+        elif self.value > 255:
+            self.value = 255
+
+        self.toAdd = 0
+        self.label.setText(str(self.value))
+        
+        self.parent.colorWheel.setRGB(self.value)
+        self.setCursor(Qt.ArrowCursor)
+        QCursor.setPos(self.mapToGlobal(self.rect().center()))
+        self.update()
 
 
 class ColourPicker(QWidget):
@@ -61,14 +118,17 @@ class ColourPicker(QWidget):
 
 
 
-        self.redlabel = QLabel("0")
+        self.redlabel = RGBSlider(self)
+        #self.redlabel.setRange(0,255)
+        #self.redlabel.setFixedWidth(50)
+        #self.redlabel.setSizePolicy(QSizePolicy.Minimum,QSizePolicy.Minimum)
         sliderscontainer.layout().addWidget(self.redlabel)
         self.greenlabel = QLabel("0")
         sliderscontainer.layout().addWidget(self.greenlabel)
         self.bluelabel = QLabel("0")
         sliderscontainer.layout().addWidget(self.bluelabel)
         
-        self.redlabel.setFont(QFont("pixelated", 12))
+        
         self.greenlabel.setFont(QFont("pixelated", 12))
         self.bluelabel.setFont(QFont("pixelated", 12))
         self.colorWheel.colourChanged_S.connect(self._updateColour)
@@ -94,7 +154,7 @@ class ColourPicker(QWidget):
     def _updateColour(self, value):
         self.colour = value
 
-        self.redlabel.setText(str(value.red()))
+        self.redlabel.label.setText(str(value.red()))
         self.greenlabel.setText(str(value.green()))
         self.bluelabel.setText(str(value.blue()))
 
@@ -125,7 +185,7 @@ class RGBSpectrumWidget(QWidget):
         
         # Set margins and fixed size
         self.setContentsMargins(5, 5, 5, 5)
-        self.resize(255, 160)
+        self.resize(160, 160)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         
         # Cache for the spectrum pixmap
@@ -136,7 +196,9 @@ class RGBSpectrumWidget(QWidget):
         
         # Background fill color
         self.backgroundFill = QColor(255, 255, 255, 255)
-        self.colour = None
+        self.mousePos = self.rect().center()
+
+        self.colour = QColor(255, 0, 0, 255)
         self.opacity = 255
 
         
@@ -233,6 +295,7 @@ class RGBSpectrumWidget(QWidget):
         
         selectorSize = 6
         
+        #draw selector
         painter.setPen(QColor(255,0,255))
         pen = QPen()
         pen.setWidth(2)
@@ -301,7 +364,18 @@ class RGBSpectrumWidget(QWidget):
             self.getRGB()
             self.update()
         
+    def setRGB(self,red:int=None,green:int=None,blue:int=None) -> None:
+        if red:
+            if 0 <= red <= 255:
+                self.colour.setRed(red)
+        if green:
+            if 0 <= green <= 255:
+                self.colour.setGreen(green)
+        if blue:
+            if 0 <= blue <= 255:
+                self.colour.setBlue(blue)
         
+        self.colourChanged_S.emit(self.colour)
 
     @Slot()
     def getRGB(self) -> QColor:

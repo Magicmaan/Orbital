@@ -171,20 +171,26 @@ class Viewport(QWidget):
 
     def _paintCanvasTiled(self, painter: QPainter):
         canvas = self._scaleImageToViewport(self.getImage(), self._imageScale)
-
         if all(self.tileCanvas): #tile diagonally
             for x in range(-self.tileCanvasRange, self.tileCanvasRange+1):
                 for y in range(-self.tileCanvasRange, self.tileCanvasRange+1):
                     painter.drawPixmap(self._imagePosition.x() + (canvas.width()*x), self._imagePosition.y() + (canvas.height()*y), canvas)
-            return
         
-        if self.tileCanvas[0]: #tile Horizontal 
-            for x in range(-self.tileCanvasRange, self.tileCanvasRange+1):
-                painter.drawPixmap(self._imagePosition.x() + (canvas.width()*x), self._imagePosition.y(), canvas)
+        else:
+            if self.tileCanvas[0]: #tile Horizontal 
+                for x in range(-self.tileCanvasRange, self.tileCanvasRange+1):
+                    painter.drawPixmap(self._imagePosition.x() + (canvas.width()*x), self._imagePosition.y(), canvas)
 
-        if self.tileCanvas[1]: #tile Vertical
-            for y in range(-self.tileCanvasRange, self.tileCanvasRange+1):
-                painter.drawPixmap(self._imagePosition.x(), self._imagePosition.y() + (canvas.height()*y), canvas)
+            if self.tileCanvas[1]: #tile Vertical
+                for y in range(-self.tileCanvasRange, self.tileCanvasRange+1):
+                    painter.drawPixmap(self._imagePosition.x(), self._imagePosition.y() + (canvas.height()*y), canvas)
+        
+        #draw outline around canvas
+        pen = QPen()
+        pen.setColor(QColor(0,0,0,255))
+        pen.setWidth(2)
+        painter.setPen(pen)
+        painter.drawRect(canvas.rect().adjusted(self._imagePosition.x(),self._imagePosition.y(),self._imagePosition.x(),self._imagePosition.y()))
         
     def _paintCanvas(self,painter: QPainter):
         if self.tileCanvas[0] or self.tileCanvas[1]:
@@ -331,10 +337,10 @@ class Viewport(QWidget):
 
         # Tile cursorpos if tiling is enabled
         if self.tileCanvas[0]:
-            canvas_x -= (self._canvasBorder * img_scale)
+            viewport_x -= (self._canvasBorder * img_scale)
             
         if self.tileCanvas[1]:
-            canvas_y -= (self._canvasBorder * img_scale)
+            viewport_y -= (self._canvasBorder * img_scale)
             
 
         # Return the mapped QPoint
