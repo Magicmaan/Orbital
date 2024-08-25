@@ -21,20 +21,28 @@ class ToolHandler(QWidget):
         #contains tool selection
         self.brush = BrushTool()
         self.select = SelectTool()
+        self.colourPicker = None #ColourPickerTool()
+        self.line = None #LineTool()
+
+
 
         #indidividual tool config (size, colour, selection etc etc)
         self.tool_config = DotDict()
+        self.tool_config.snapToEdge = False
+        
 
-        self.current_tool = self.select
+
+
+        self.current_tool = self.brush
+        self.shift_tool = self.line
+        self.alt_tool = self.colourPicker
     
-    def onAction(self, position, painter=None):
-        self.current_tool.onAction(position, painter)
-    
+
     @Slot(toolClickEvent)
     def toolAction(self, value:toolClickEvent):
-        self.current_tool.onAction(value)
+        self.current_tool.onClick(value)
     
     @Slot(toolReleaseEvent)
     def toolReleaseAction(self, value:toolReleaseEvent):
-        self.current_tool.onActionRelease(value)
+        self.current_tool.onRelease(value)
     

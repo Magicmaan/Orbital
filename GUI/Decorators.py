@@ -21,6 +21,9 @@ def PixelBorder(cls):
     if not hasattr(cls,"pixelBorderFill"):
         cls.pixelBorderFill = True
 
+    if not hasattr(cls,"pixelBorderFillColour"):
+        cls.pixelBorderFillColour = False
+
     def _generatePixelBorder(self):
         width = self.width()
         height = self.height()
@@ -28,7 +31,7 @@ def PixelBorder(cls):
 
         painter = QPainter(pmap)
 
-        drawPixelBorder(pmap, painter,QPixmap(self.pixelBorderPath),3,2,self.pixelBorderFill)
+        drawPixelBorder(pmap, painter,QPixmap(self.pixelBorderPath),3,2,self.pixelBorderFill,self.pixelBorderFillColour)
 
         self._pixelBorderCache = pmap
 
@@ -60,7 +63,7 @@ def PixelBorder(cls):
     return cls
 
 
-def mouseClick(cls):
+def mouseClick(cls:QWidget):
     # Add mouse tracking attributes
     if not hasattr(cls, 'mouseClicks'):
         cls.mouseClicks = DotDict(
@@ -76,9 +79,9 @@ def mouseClick(cls):
 
         cls.mouseReleasePos = QPoint(0,0)
 
-    if not hasattr(cls, 'mouseHistory'):
+    if not hasattr(cls, 'lastMousePos'):
         cls.lastMousePos = QPoint(0,0)
-    
+
     #original event
     original_mouse_press_event = cls.mousePressEvent
     original_mouse_move_event = cls.mouseMoveEvent
@@ -86,15 +89,15 @@ def mouseClick(cls):
 
 
     def customMousePressEvent(self, event):
+        self.mousePos = event.position().toPoint()
+        self.mousePressPos = event.position().toPoint()
+
         if event.button() == Qt.LeftButton:
             self.mouseClicks.left = True
         elif event.button() == Qt.RightButton:
             self.mouseClicks.right = True
         elif event.button() == Qt.MiddleButton:
             self.mouseClicks.middle = True
-        
-        self.mousePos = event.position().toPoint()
-        self.mousePressPos = event.position().toPoint()
         
         if hasattr(self,"onMouseClick"):
             self.onMouseClick()
@@ -108,7 +111,7 @@ def mouseClick(cls):
         #if self.hasMouseTracking():
         self.lastMousePos = self.mousePos
         self.mousePos = event.position().toPoint()
-        
+
         if hasattr(self,"onMouseMove"):
             self.onMouseMove()
 
@@ -118,6 +121,9 @@ def mouseClick(cls):
 
     
     def customMouseReleaseEvent(self, event):
+        self.mousePos = event.position().toPoint()
+        self.mouseReleasePos = event.position().toPoint()
+
         if event.button() == Qt.LeftButton:
             self.mouseClicks.left = False
 
@@ -127,8 +133,7 @@ def mouseClick(cls):
         elif event.button() == Qt.MiddleButton:
             self.mouseClicks.middle = False
         
-        self.mousePos = event.position().toPoint()
-        self.mouseReleasePos = event.position().toPoint()
+        
 
         if hasattr(self,"onMouseRelease"):
             self.onMouseRelease()
@@ -137,21 +142,10 @@ def mouseClick(cls):
 
         self.update()
     
-    def clickHandler(self):
-        #redirect to prettified stuff cus im stupid frankly
-        if hasattr(self,"onMouseClick"):
-            self.onMouseClick()
-        
-        
-
-        
-        
-        self.update()
 
     cls.mousePressEvent = customMousePressEvent
     cls.mouseMoveEvent = customMouseMoveEvent
     cls.mouseReleaseEvent = customMouseReleaseEvent
-    cls.clickHandler = clickHandler
 
     return cls
 

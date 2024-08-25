@@ -2,13 +2,14 @@
 import sys
 from os.path import exists
 
+from math import ceil, floor
 from PySide6.QtCore import QPoint, QRect, QSize, Qt
-from PySide6.QtGui import QPainter, QPixmap, QWheelEvent
+from PySide6.QtGui import QPainter, QPixmap, QWheelEvent, QPen, QFont, QColor
 from PySide6.QtWidgets import QLabel, QSizePolicy, QVBoxLayout, QWidget, QHBoxLayout
 
 from DialogBox import ErrorDialog, SuccessDialog
 from GUI.Widgets.WidgetUtils import removePadding
-
+from Utils import clamp
 DEFAULT_IMG = "Resources/default_canvas.png"
 
 
@@ -44,41 +45,104 @@ class Canvas(QWidget):
     def drawRect(self,rect,position):
         pass
 
-
-
-
-    def scaleImageToViewport(self,scale):
-        #if scale == self.scale:
-        #    return self._scaleImageCache
+    def ViewportStyling(self,image:QPixmap) -> QPixmap:
         
-        self.scale = scale
+        scale = self.scale
+        border = 10
 
-        # Get the image
-        image = self.image
+        print(f"Scale: {scale}")
+        
 
-        #make pixmap for upscale
-        scaleImage = QPixmap(image.size()*scale)
+        expandedImage = QPixmap(image.width() + border * 2, image.height() + border * 2)
+        expandedImage.fill(QColor(0, 0, 0, 0))  # Fill with transparent color
+        #draw image to expanded image
+        painter = QPainter(expandedImage)
+        #painter.fillRect(expandedImage.rect(), Qt.black)
+
+        print(f"hasAlpha: {expandedImage.hasAlphaChannel()}")
+        
+
+        #styling
+        # Styling
+        pen = QPen(QColor(255,255,255,125))  # Set the pen color to red
+        pen.setWidth(1)  # Set the pen width
+        painter.setPen(pen)
+
+        #set font + no aliasing
+        font = QFont("pixelated", 6)
+        font.setHintingPreference(QFont.PreferNoHinting)
+        font.setStyleStrategy(QFont.NoAntialias)
+        painter.setFont(font)
+        
+
+        # Draw the border
+        AxisBorder = 1
+        AxisOffset = 4
+        # Draw line on top border
+        painter.drawLine(border -AxisBorder, border -AxisOffset, 
+                         expandedImage.width() -border +AxisBorder, border -AxisOffset)
+        # Draw line on left border
+        painter.drawLine(border -AxisOffset, border -AxisBorder, 
+                         border -AxisOffset, expandedImage.height() -border +AxisBorder)  
+
+        #centre y marker
+        painter.drawPoint(border -AxisOffset +1, int(expandedImage.height()/2))
+        if expandedImage.height() % 2 == 0: #if the width is even, draw an extra line
+            painter.drawPoint(border - AxisOffset +1, int(expandedImage.height()/2)-1)
+        
+        #centre x marker
+        painter.drawPoint(int(expandedImage.width()/2), border - AxisOffset +1)
+        if expandedImage.width() % 2 == 0: #if the width is even, draw an extra line
+            painter.drawPoint(int(expandedImage.width()/2)-1, border - AxisOffset +1)
+
+        # draw size
+        painter.drawText(border - AxisBorder, border - AxisOffset -1, f"{image.width()}")
+
+        painter.drawText(border - AxisBorder -6, border - AxisOffset -1, "X")
+
+        painter.rotate(-90)
+        painter.drawText(-(border + AxisOffset +5), border - AxisOffset -1, f"{image.height()}")
+        painter.rotate(90)
 
         
-        # Define the source and destination rects to draw to
-        sourceRect = QRect(0, 0, image.width(), image.height())
-        destRect = QRect(0, 0, 
-                         int(scaleImage.width()), 
-                         int(scaleImage.height()))
+           
+        # Draw the image
+        painter.drawPixmap(border, border, image)
 
-        # Create a painter for the viewport
-        painter = QPainter(scaleImage)
-
-        # Draw the scaled image
-        painter.drawPixmap(destRect, image, sourceRect)
-
+        
         painter.end()
 
+        return expandedImage
+
+    def scaleImageToViewport(self, scale):
+        # if scale == self.scale:
+        #    return self._scaleImageCache
+        border = 2
+        # Get the image
+        image = self.image.copy()
+        self.scale = scale
+        # draw border + details stuff
+        imageStyled = self.ViewportStyling(image)
+
+        # Make pixmap for upscale
+        scaledImage = QPixmap(imageStyled.size() * scale)
+        scaledImage.fill(QColor(0, 0, 0, 0))
+
+        # Define the source and destination rects to draw to
+        sourceRect = QRect(0, 0, imageStyled.width(), imageStyled.height())
+        destRect = QRect(0, 0, int(scaledImage.width()), int(scaledImage.height()))
+
+        # Create a painter for the viewport
+        painter = QPainter(scaledImage)
+        # Draw the scaled image
+        painter.drawPixmap(destRect, imageStyled, sourceRect)
+        painter.end()
 
         # Cache the image
-        self._scaleImageCache = scaleImage
+        self._scaleImageCache = scaledImage
 
         return self._scaleImageCache
+    
 
 
 

@@ -3,7 +3,7 @@ from os.path import exists
 from typing import Type
 
 from PySide6.QtCore import QPoint, QRect, Qt
-from PySide6.QtGui import QPainter, QPixmap, QTransform
+from PySide6.QtGui import QPainter, QPixmap, QTransform, QColor
 
 from DialogBox import ErrorDialog, SuccessDialog
 
@@ -41,7 +41,7 @@ def removePadding(object):
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
 
-def drawPixelBorder(object, painter: QPainter,pmap:QPixmap,edgeSize=2,scale=2,Fill=True):
+def drawPixelBorder(object, painter: QPainter,pmap:QPixmap,edgeSize=2,scale=2,Fill=True,FillColour=False):
     es = edgeSize  # Size of the edge sections
     w,h = pmap.width(),pmap.height()
 
@@ -55,8 +55,11 @@ def drawPixelBorder(object, painter: QPainter,pmap:QPixmap,edgeSize=2,scale=2,Fi
     )
 
     if Fill:
-        #fill in main colour
-        painter.fillRect(shrunk_rect, pmap.toImage().pixelColor(pmap.width()//2, pmap.height()//2))  # Green color
+        if FillColour:
+            painter.fillRect(shrunk_rect, FillColour)
+        else:
+            #fill in main colour
+            painter.fillRect(shrunk_rect, pmap.toImage().pixelColor(pmap.width()//2, pmap.height()//2))  # Green color
     
     #sides ----------------------------------------------------------------
     top_cutout = QRect(es,0,w-es-1,2)

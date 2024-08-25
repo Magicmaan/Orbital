@@ -28,12 +28,11 @@ class BrushTool():
     def setProperties(self,properties:dict):
         self.properties = properties
 
-    def onAction(self, value: toolClickEvent):
+    def onClick(self, value: toolClickEvent):
         painter = QPainter(value.target)
         
         painter.setPen(self.properties.colour)
         painter.drawLine(value.position, value.prevposition)
-
 
         painter.end()
     

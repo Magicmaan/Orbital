@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QApplication, QWidget, QSizePolicy, QVBoxLayout, QSlider, QLabel, QHBoxLayout
-from PySide6.QtGui import QMouseEvent, QPainter, QColor, QPixmap, qRgb
+from PySide6.QtGui import QMouseEvent, QPainter, QColor, QPixmap, qRgb, QPen, QFont
 from PySide6.QtCore import Qt, QPoint, QRect, Signal, Slot
 
 from math import sqrt, atan2, sin, cos, tan, degrees, radians
@@ -27,7 +27,7 @@ from GUI.Decorators import PixelBorder, sizePolicy, mouseClick
  
 
 
-@PixelBorder
+
 class ColourPicker(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -35,7 +35,7 @@ class ColourPicker(QWidget):
         self.setContentsMargins(20,20,20,20)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.colorWheel = RGBSpectrumWidget()
-        self.colorWheel.setSize(128)
+        self.colorWheel.setSize(255,160)
 
         self.opacitySlider = QSlider(Qt.Horizontal)
         self.opacitySlider.setContentsMargins(0,0,0,0)
@@ -55,9 +55,11 @@ class ColourPicker(QWidget):
 
         sliderscontainer = QWidget()
         sliderscontainer.setLayout(QHBoxLayout())
-        sliderscontainer.setFixedHeight(100)
+        sliderscontainer.setFixedSize(180,30)
         self.layout().addWidget(sliderscontainer)
         sliderscontainer.layout().setSpacing(10)
+
+
 
         self.redlabel = QLabel("0")
         sliderscontainer.layout().addWidget(self.redlabel)
@@ -66,6 +68,9 @@ class ColourPicker(QWidget):
         self.bluelabel = QLabel("0")
         sliderscontainer.layout().addWidget(self.bluelabel)
         
+        self.redlabel.setFont(QFont("pixelated", 12))
+        self.greenlabel.setFont(QFont("pixelated", 12))
+        self.bluelabel.setFont(QFont("pixelated", 12))
         self.colorWheel.colourChanged_S.connect(self._updateColour)
 
 
@@ -108,24 +113,40 @@ class RGBSpectrumWidget(QWidget):
     colourChanged_S = Signal(QColor)
 
     def __init__(self, parent=None):
+        """
+        Initializes the ColourPicker widget.
+        """
         super().__init__(parent)
-        self.setMouseTracking(True)
+        
+        # Set window title
         self.setWindowTitle("RGB Spectrum")
-        self.setContentsMargins(0,0,0,0)
-        self.setFixedSize(255,160)
-        self._PixmapSpectrum = None  # Cache for the spectrum pixmap
-        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-        self.backgroundFill = QColor(255,255,255,255)
-        self._displayModes = (self._RGBSpectrum, self._HSVSpectrum, self._HSLSpectrum, self._CMYKSpectrum)#
-        self.currentDisplayMode = self._displayModes[1]
-
-        self.colourChanged_S.connect(QApplication.instance().program.tools.current_tool._updateColour)
-
+        # Enable mouse tracking
+        self.setMouseTracking(True)
+        
+        # Set margins and fixed size
+        self.setContentsMargins(5, 5, 5, 5)
+        self.resize(255, 160)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        
+        # Cache for the spectrum pixmap
+        self._PixmapSpectrum = None
+        # Display modes for the spectrum
+        self._displayModes = (self._RGBSpectrum, self._HSVSpectrum, self._HSLSpectrum, self._CMYKSpectrum)
+        self.currentDisplayMode = self._displayModes[1]  # Default to HSV Spectrum
+        
+        # Background fill color
+        self.backgroundFill = QColor(255, 255, 255, 255)
         self.colour = None
         self.opacity = 255
-        #self.mousePos = QPoint(0,0)
-        #self.click = False
-        self.lastMousePos = QPoint(0,0)
+
+        
+        
+        
+        # Connect colour changed signal to the current tool's update colour method
+        self.colourChanged_S.connect(QApplication.instance().program.tools.current_tool._updateColour)
+        
+        
+        
 
     def _RGBSpectrum(self):
         pass
@@ -184,7 +205,7 @@ class RGBSpectrumWidget(QWidget):
         pass
 
     def generateSpectrum(self):
-        width,height = 128,128
+        width,height = 160,160  
         self._PixmapSpectrum = self.currentDisplayMode(width,height)
 
     def paintEvent(self, event):
@@ -193,26 +214,33 @@ class RGBSpectrumWidget(QWidget):
 
         painter = QPainter(self)
 
-        if self.backgroundFill:
-            painter.fillRect(self.rect(),self.backgroundFill)
-
         #draw spectrum
         painter.setOpacity(self.opacity/255)
-        painter.drawPixmap(0, 0, self._PixmapSpectrum)
+        
+        x = (self.width() - self._PixmapSpectrum.width()) // 2
+        y = (self.height() - self._PixmapSpectrum.height()) // 2
+        
+        # Draw the pixmap centered in the widget
+        painter.drawPixmap(x, y, self._PixmapSpectrum)
         painter.setOpacity(1)
 
-        painter.setPen(QColor(255,0,255))
         if self.mouseClicks.left:
             x = self.mousePos.x()
             y = self.mousePos.y()
         else:
             x = self.mouseReleasePos.x()
             y = self.mouseReleasePos.y()
+        
+        selectorSize = 6
+        
+        painter.setPen(QColor(255,0,255))
+        pen = QPen()
+        pen.setWidth(2)
+        painter.setPen(pen)
+        pos = QRect(x-selectorSize/2,y-selectorSize/2,selectorSize,selectorSize)
+        painter.drawRoundedRect(pos,2,2)
 
-        pos = QRect(x-2,y-2,4,4)
-        painter.drawRect(pos)
-
-        painter.end()
+        
 
     def snaptoCircle(self):
          # Get the center of the widget
@@ -285,9 +313,9 @@ class RGBSpectrumWidget(QWidget):
             
         return self.colour
         
-    def setSize(self,squareSize:int):   
-        if squareSize > 25:
-            self.setFixedSize(squareSize,squareSize)
+    def setSize(self,xSize:int,ySize:int):   
+        if xSize > 25 and ySize > 25:
+            self.setFixedSize(xSize,ySize)
 
         return
 
