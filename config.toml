@@ -1,0 +1,53 @@
+# This is a basic TOML configuration file
+name = 'Orbital'
+version = '0.0.1'
+website = 'https://orbital.com'
+author = 'Theo Baker'
+
+
+
+
+[window]
+width = 900
+height = 800
+scale = 1
+use_custom_window = true
+icon_path = 'Resources/icons/icon.png'
+title = 'Orbital'
+
+[GUI]
+
+[theme]
+
+[theme.Viewport]
+
+
+
+[viewport]
+tiling_range = 2
+tile_x = true
+tile_y = true
+
+border_color = 'black'
+border_thickness = 2
+
+show_border = true
+show_axis = true
+show_size = true
+show_filepath = true
+show_transparency_grid = true
+
+snap_to_grid = true
+snap_to_edge = true
+
+scale_default = 1
+scale_range_min = 0.1
+scale_range_max = 50
+scale_step = 0.1
+
+[Viewport.colourPicker]
+current_spectrum = "HSVSpectrum"
+current_display = "RGB"
+
+show_alpha = true
+show_background = true

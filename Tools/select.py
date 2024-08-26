@@ -16,7 +16,7 @@ class SelectTool(QObject):
             size=1,
             brush=0
         )
-
+        self.name = "select"
         self.selectorRect = QRect(0,0,1,1)
         self.offset = 0
 
@@ -42,7 +42,8 @@ class SelectTool(QObject):
     def setProperties(self,properties:dict):
         self.properties = properties
 
-    def onAction(self, value: toolClickEvent):
+    def onClick(self, value: toolClickEvent):
+        print("Selecting")
         return
         painter = QPainter(value.target)
         
@@ -60,7 +61,8 @@ class SelectTool(QObject):
 
         painter.end()
     
-    def onActionRelease(self,value:toolReleaseEvent):
+    def onRelease(self, value: toolClickEvent):
+        return
         self.selectorRect.adjust(value.startposition.x(),value.startposition.x(),value.position.x(),value.position.y())
 
         painter = QPainter(value.target)

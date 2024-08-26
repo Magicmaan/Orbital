@@ -13,6 +13,10 @@ from Tools.select import SelectTool
 from Utils import DotDict
 
 
+#TODO: ADD tools
+#TODO: link to Tool Selector Widget
+#TODO: change interaction method to use signals, and have global interface
+#TODO: Keybinds for tools
 
 @PixelBorder
 class ToolHandler(QWidget):
@@ -21,10 +25,9 @@ class ToolHandler(QWidget):
         #contains tool selection
         self.brush = BrushTool()
         self.select = SelectTool()
+
         self.colourPicker = None #ColourPickerTool()
         self.line = None #LineTool()
-
-
 
         #indidividual tool config (size, colour, selection etc etc)
         self.tool_config = DotDict()
@@ -45,4 +48,13 @@ class ToolHandler(QWidget):
     @Slot(toolReleaseEvent)
     def toolReleaseAction(self, value:toolReleaseEvent):
         self.current_tool.onRelease(value)
+    
+    @Slot(toolChangeEvent)
+    def toolChangeAction(self, value:toolChangeEvent):
+        print(value)
+        if hasattr(self,value.tool):
+            self.current_tool = getattr(self,value.tool)
+            #if value.config:
+            #    self.tool_config = value.config
+            #self.current_tool.setProperties(self.tool_config)
     

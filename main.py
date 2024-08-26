@@ -5,15 +5,16 @@ from PySide6.QtWidgets import QApplication
 
 from Program import Program
 
-#FIX SIZE POLICY
-#U SET IT TO USE A DECORATOR
-#REVERT IT OR FIX IDIOT
+#TODO:
+# 1. add toml file for configuration
+# 2. add hot-loading of configuration + assets
+# 3. Add Theme config (to make 2 more fun)
 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     
-    window = Program(useCustomWindow=True)
+    window = Program()
 
     # Set the application-wide font
     font = QFont("mai10", 14)  # You can specify the font family, size, and weight

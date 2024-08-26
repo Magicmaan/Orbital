@@ -12,6 +12,8 @@ from Tools.ToolHandler import ToolHandler
 from GUI.Widgets.ColourPicker import ColourPicker
 from GUI.Widgets.WidgetUtils import drawPixelBorder, removePadding
 from Utils import getFont
+from config import *
+from GUI.Widgets.CanvasSettingsWindow import ViewportSettingsWindow
 
 
 class pixelWidget(QWidget):
@@ -31,30 +33,34 @@ class pixelWidget(QWidget):
         super().paintEvent(event)
 
 class Program(QMainWindow):
-    def __init__(self, useCustomWindow=False,parent=None) -> None:
+    def __init__(self, use_custom_window=False,parent=None) -> None:
         super().__init__(parent)
         #create reference accessible from program
         QApplication.instance().program = self
+
+        self.config = loadToml("config.toml")
+
+        use_custom_window = self.config.window["use_custom_window"]
 
         self.app = QApplication.instance()
         self.setMouseTracking(True)
         self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
 
-        self.minSize = QSize(800,600)
+        self.min_size = QSize(800,600)
+
         #setup window
-        self.setWindowTitle("Orb")
-        self.setMinimumSize(self.minSize)  # Minimum size for the window
-        self.appIcon = QIcon("Resources/icons/icon.png")
-        self.app.setWindowIcon(self.appIcon)
+        self.setWindowTitle(f"{self.config.name} {self.config.version}")
+        self.setMinimumSize(self.min_size)  # Minimum size for the window
+        self.app.setWindowIcon(QPixmap(self.config.window["icon_path"]))
         removePadding(self)
         
         #set custom font
-        font_Path = "Resources/fonts/pixelated.ttf"
-        self.setCustFont(font_Path,8)
+        font_path = "Resources/fonts/pixelated.ttf"
+        self.setCustFont(font_path,8)
 
         #set custom font
-        font_Path = "Resources/fonts/mai10.ttf"
-        self.setCustFont(font_Path,8)
+        font_path = "Resources/fonts/mai10.ttf"
+        self.setCustFont(font_path,8)
         
         
         self.setLayout(QVBoxLayout())
@@ -66,95 +72,83 @@ class Program(QMainWindow):
         #self.layout.addStretch()  # To fill the remaining space if needed
         # Custom Frame 
 
-        if useCustomWindow:
+        if use_custom_window:
             self.window = customWindow()
-            self.windowContainer = self.window.layout()
+            self.window_container = self.window.layout()
         else:
             self.window = defaultWindow(self)
-            self.windowContainer = self.window.layout()
+            self.window_container = self.window.layout()
 
         self.tools = ToolHandler()
 
-        self.contextBar = Contextbar()
-        self.windowContainer.addWidget(self.contextBar)
+        self.context_bar = Contextbar()
+        self.window_container.addWidget(self.context_bar)
 
-        centerContainer = QWidget(self.window)
-        centerContainer.setStyleSheet("background:rgb(180,165,147);border-radius:0px;")
-        centerContainer.resize(QSize(800,600))
-        centerContainer.setSizePolicy(QSizePolicy.Expanding,QSizePolicy.Expanding)
-        centerContainerLayout = QGridLayout(centerContainer)
-        centerContainerLayout.setContentsMargins(2,2,2,2)
-        centerContainerLayout.setSpacing(5)
-        self.windowContainer.addWidget(centerContainer)
+        center_container = QWidget(self.window)
+        center_container.setStyleSheet("background:rgb(180,165,147);border-radius:0px;")
+        center_container.resize(QSize(800,600))
+        center_container.setSizePolicy(QSizePolicy.Expanding,QSizePolicy.Expanding)
+        center_container.setLayout(QGridLayout())
+        center_container.layout().setContentsMargins(2,2,2,2)
+        center_container.layout().setSpacing(5)
+        self.window_container.addWidget(center_container)
         #self.windowContainer.setRowStretch(0,1)
         #self.windowContainer.setColumnStretch(0,1)
         
-        leftBar = pixelWidget()
-        leftBar.setMaximumWidth(300)
-        leftBar.setSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.Expanding)
-        leftBar.setLayout(QVBoxLayout())
-        leftBar.layout().setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        leftBar.setContentsMargins(0,0,0,0)
-        leftBar.layout().setContentsMargins(0,0,0,0)
+        left_bar = pixelWidget()
+        left_bar.setMaximumWidth(300)
+        left_bar.setSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.Expanding)
+        left_bar.setLayout(QVBoxLayout())
+        left_bar.layout().setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        left_bar.setContentsMargins(0,0,0,0)
+        left_bar.layout().setContentsMargins(0,0,0,0)
+        left_bar.layout().setAlignment(Qt.AlignmentFlag.AlignTop)
         self.colourPicker = ColourPicker()
-        leftBar.layout().addWidget(self.colourPicker)
+        left_bar.layout().addWidget(self.colourPicker)
+
+        self.viewportsettings = ViewportSettingsWindow()
+        left_bar.layout().addWidget(self.viewportsettings)
 
        
-        centerContainerLayout.addWidget(leftBar,1,0)
-        centerContainerLayout.addWidget(Toolbar(),0,1)
+        center_container.layout().addWidget(left_bar,1,0)
+        center_container.layout().addWidget(Toolbar(),0,1)
         
         
         
 
         #Create and configure the Canvas widget
         self.canvas = Viewport()
-        self.currentTarget = self.canvas
+        self.current_target = self.canvas
         #self.canvas.setStyleSheet("border: purple 5px solid;")
         # Add the Canvas widget to the layout
-        centerContainerLayout.addWidget(self.canvas,1,1)
+        center_container.layout().addWidget(self.canvas,1,1)
         
-        centerContainerLayout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        center_container.layout().setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        RightBar = pixelWidget()
-        RightBar.setFixedWidth(25)
-        RightBar.setSizePolicy(QSizePolicy.Fixed,QSizePolicy.Expanding)
-        RightBar.setLayout(QVBoxLayout())
-        removePadding(RightBar)
+        right_bar = pixelWidget()
+        right_bar.setFixedWidth(25)
+        right_bar.setSizePolicy(QSizePolicy.Fixed,QSizePolicy.Expanding)
+        right_bar.setLayout(QVBoxLayout())
+        removePadding(right_bar)
 
         #   RightBar.layout().addWidget(QLabel("Hi    "))
-        centerContainerLayout.addWidget(RightBar,1,2)
+        center_container.layout().addWidget(right_bar,1,2)
         
 
-        cl = centerContainerLayout
-        cl.setRowStretch(1,1)
-        cl.setColumnStretch(1,1)
 
-        cl.setRowStretch(0,1)
-        cl.setColumnStretch(1,1)
+        center_container.layout().setRowStretch(1,1)
+        center_container.layout().setColumnStretch(1,1)
+        center_container.layout().setRowStretch(0,1)
+        center_container.layout().setColumnStretch(1,1)
 
         
 
         print("Program Started")
 
 
+    def getConfig(self):
+        return self.config
 
-    def setupGUI(self):
-        #self = actual program
-        self.setLayout(QVBoxLayout())
-        removePadding(self)
-
-        
-        # Custom Frame 
-        #create custom frame for window,
-        if self.isCustomWindow():
-            self.window = customWindow(self)
-            self.windowContainer = self.window.layout()
-        else:
-            self.window = defaultWindow(self)
-            self.windowContainer = self.window.layout()
-
-        
-        pass
 
     def isCustomWindow(self) -> bool:
         if self.window.objectName() == "customWindow":
@@ -162,17 +156,17 @@ class Program(QMainWindow):
         else:
             return False
 
-    def setCustFont(self,fontPath,size) -> bool:
+    def setCustFont(self,font_path,size) -> bool:
         #add font to application 
-        fontID = QFontDatabase.addApplicationFont(fontPath)
+        fontID = QFontDatabase.addApplicationFont(font_path)
         if fontID == -1:
-            print(f"failed to load font: {fontPath}")
+            print(f"failed to load font: {font_path}")
             return False 
         
         #get font from ID
         self.font = getFont(fontID,size)
         self.setFont(self.font)
-        print(f"Set Font to {fontID} | {fontPath}")
+        print(f"Set Font to {fontID} | {font_path}")
 
         return True
     

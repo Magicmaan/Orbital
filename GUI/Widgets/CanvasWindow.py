@@ -30,19 +30,41 @@ class Viewport(QWidget):
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
-        
-        # Initialize variables
-        self.imageScaleRange = (0.25, 50)
-        self._imageScale = 1
-        self._imagePosition = QPoint(0, 0)
+        self.program = QApplication.instance().program
+
+        config = self.program.getConfig().viewport
+
+        self.tiling_range = config["tiling_range"]
+        self.tile_canvas = [config["tile_x"], config["tile_y"]]
+        self.show_border = config["show_border"]
+
+        self.border_color = QColor()
+        self.border_color.setNamedColor("black")
+        self.border_thickness = config["border_thickness"]
+
+        self.show_axis = config["show_axis"]
+        self.show_size = config["show_size"]
+        self.show_filepath = config["show_filepath"]
+        self.show_transparency_grid = config["show_transparency_grid"]
+
+
+        self.snap_to_grid = config["snap_to_grid"]
+        self.snap_to_edge = config["snap_to_edge"]
+
+
+        #initalise canvas view variables
+        self.image_scale = config["scale_default"]
+        self.image_scale_range = (config["scale_range_min"], config["scale_range_max"])
+        self.image_scale_step = config["scale_step"]
+        self.image_position = QPoint(0, 0)
+
         self.canvas = Canvas("Resources/default_canvas.png")
-        self.tileCanvas = [True, True]
-        self.tileCanvasRange = 2
+
 
         self._canvasSettings = {}
         self._scaleImageCache = None
 
-        self._canvasBorder = 10
+        self._canvas_padding = 10
         self._canvasAxisBorder = 1
         self._canvasAxisOffset = 4
 
@@ -67,7 +89,7 @@ class Viewport(QWidget):
         self.setContentsMargins(6, 6, 6, 6)
 
         # Connect signals
-        self.program = QApplication.instance().program
+        
         self.toolClick_S.connect(self.program.tools.toolAction)
         self.toolRelease_S.connect(self.program.tools.toolReleaseAction)
 
@@ -82,13 +104,13 @@ class Viewport(QWidget):
         self.update()
 
     def _scrollVertical(self, value: float) -> None:
-        self.moveCanvas(QPoint(self._imagePosition.x(), value))
+        self.moveCanvas(QPoint(self.image_position.x(), value))
 
         self.update()
 
     def _scrollHorizontal(self, value: float) -> None:
         val = value / 100
-        self.moveCanvas(QPoint(self.width() * val, self._imagePosition.y()))
+        self.moveCanvas(QPoint(self.width() * val, self.image_position.y()))
 
         self.update()
 
@@ -99,53 +121,121 @@ class Viewport(QWidget):
         self.canvas.image.load(img)
         self.canvas.setFixedSize(self.canvas.image.size())
 
-    def _styleViewport(self, image: QPixmap, scale: float) -> QPixmap:
-        self._canvasAxisBorder = 1
-        self._canvasAxisOffset = 4
+    
 
-        expandedImage = QPixmap(image.width() + self._canvasBorder * 2, image.height() + self._canvasBorder * 2)
-        expandedImage.fill(QColor(0, 0, 0, 0))  # Fill with transparent color
+    def _drawCanvasSize(self, image: QPixmap, painter: QPainter):
+        if not self.show_size:
+            return
 
-        painter = QPainter(expandedImage)
+        painter.drawText(self._canvas_padding - self._canvasAxisBorder, self._canvas_padding - self._canvasAxisOffset - 1, f"{image.width()}")
+        painter.drawText(self._canvas_padding - self._canvasAxisBorder - 6, self._canvas_padding - self._canvasAxisOffset - 1, "X")
+        painter.rotate(-90)
+        painter.drawText(-(self._canvas_padding + self._canvasAxisOffset + 5), self._canvas_padding - self._canvasAxisOffset - 1, f"{image.height()}")
+        painter.rotate(90)
+
+
+    def _drawCanvasAxis(self, image, painter: QPainter):
+        # Draw the border
+        if not self.show_axis:
+            return
         
+        painter.drawLine(self._canvas_padding - self._canvasAxisBorder, self._canvas_padding - self._canvasAxisOffset, 
+                        image.width() - self._canvas_padding + self._canvasAxisBorder, self._canvas_padding - self._canvasAxisOffset)
+        painter.drawLine(self._canvas_padding - self._canvasAxisOffset, self._canvas_padding - self._canvasAxisBorder, 
+                        self._canvas_padding - self._canvasAxisOffset, image.height() - self._canvas_padding + self._canvasAxisBorder)
 
-        # Styling
-        pen = QPen(QColor(255, 255, 255, 125))  # Set the pen color to white with transparency
-        pen.setWidth(1)  # Set the pen width
+        # Center Y marker
+        painter.drawPoint(self._canvas_padding - self._canvasAxisOffset + 1, int(image.height() / 2))
+        if image.height() % 2 == 0:  # If the height is even, draw an extra line
+            painter.drawPoint(self._canvas_padding - self._canvasAxisOffset + 1, int(image.height() / 2) - 1)
+        # Center X marker
+        painter.drawPoint(int(image.width() / 2), self._canvas_padding - self._canvasAxisOffset + 1)
+        if image.width() % 2 == 0:  # If the width is even, draw an extra line
+            painter.drawPoint(int(image.width() / 2) - 1, self._canvas_padding - self._canvasAxisOffset + 1)
+
+    def _drawCanvasFilepath(self, painter: QPainter, image:QPixmap):
+        if not self.show_filepath:
+            return
+        painter.save()
+
+        font = QFont("pixelated", 16)  # You can specify the font family, size, and weight
+        painter.setFont(font)
+
+        painter.setPen(QColor(255, 255, 255,125))  # Set the pen color to white
+        xpos = self.image_position.x() + (10*self.image_scale)
+        ypos = self.image_position.y() + 20 + ((self.canvas.height() + 10)*self.image_scale)
+
+        
+        if self.tile_canvas[0]:
+            xpos -= self.tiling_range * image.width()
+        if self.tile_canvas[1]:
+            ypos += self.tiling_range * image.height()
+                
+        painter.drawText(xpos,
+                         ypos, 
+                         self.canvas.filepath)
+
+        painter.restore()
+    
+    def _drawCanvasBorder(self, painter: QPainter, canvas: QPixmap):
+        if not self.show_border:
+            return
+
+        offset = self._canvas_padding * self.image_scale
+
+        rects = []
+
+        inner_rect = canvas.rect()
+        inner_rect = inner_rect.adjusted(offset, offset, -offset, -offset)
+        inner_rect.adjust(self.image_position.x(), self.image_position.y(), self.image_position.x(), self.image_position.y())
+        
+        if any(self.tile_canvas):
+            inner_rect.adjust(-offset, -offset, offset, offset)
+            outer_rect = inner_rect.adjusted(0,0,0,0)
+
+            if self.tile_canvas[0]:
+                outer_rect.adjust(-self.tiling_range * canvas.width(), 0, self.tiling_range * canvas.width(), 0)
+                
+            if self.tile_canvas[1]:
+                outer_rect.adjust(0, -self.tiling_range * canvas.height(), 0, self.tiling_range * canvas.height())  
+            
+            rects.append(outer_rect)
+
+
+        rects.append(inner_rect)
+        # Set the pen color and width
+        pen = QPen(self.border_color)
+        pen.setWidth(self.border_thickness)
         painter.setPen(pen)
+        # Draw the border
+        painter.drawRects(rects)
+    
+
+
+    def _styleViewport(self, image: QPixmap, scale: float) -> QPixmap:
+        """Apply styling to canvas at its scale"""
+        expandedImage = QPixmap(image.width() + self._canvas_padding * 2, image.height() + self._canvas_padding * 2)
+        expandedImage.fill(QColor(0, 0, 0, 0))  # Fill with transparent color
+        painter = QPainter(expandedImage)
 
         # Set font and disable aliasing
         font = QFont("pixelated", 6)
         font.setHintingPreference(QFont.PreferNoHinting)
         font.setStyleStrategy(QFont.NoAntialias)
         painter.setFont(font)
+        # Styling
+        pen = QPen(QColor(255, 255, 255, 125))  # Set the pen color to white with transparency
+        pen.setWidth(1)  # Set the pen width
+        painter.setPen(pen)
+        
 
-        # Draw the border
-        painter.drawLine(self._canvasBorder - self._canvasAxisBorder, self._canvasBorder - self._canvasAxisOffset, 
-                        expandedImage.width() - self._canvasBorder + self._canvasAxisBorder, self._canvasBorder - self._canvasAxisOffset)
-        painter.drawLine(self._canvasBorder - self._canvasAxisOffset, self._canvasBorder - self._canvasAxisBorder, 
-                        self._canvasBorder - self._canvasAxisOffset, expandedImage.height() - self._canvasBorder + self._canvasAxisBorder)
-
-        # Center Y marker
-        painter.drawPoint(self._canvasBorder - self._canvasAxisOffset + 1, int(expandedImage.height() / 2))
-        if expandedImage.height() % 2 == 0:  # If the height is even, draw an extra line
-            painter.drawPoint(self._canvasBorder - self._canvasAxisOffset + 1, int(expandedImage.height() / 2) - 1)
-
-        # Center X marker
-        painter.drawPoint(int(expandedImage.width() / 2), self._canvasBorder - self._canvasAxisOffset + 1)
-        if expandedImage.width() % 2 == 0:  # If the width is even, draw an extra line
-            painter.drawPoint(int(expandedImage.width() / 2) - 1, self._canvasBorder - self._canvasAxisOffset + 1)
-
-        # Draw size
-        painter.drawText(self._canvasBorder - self._canvasAxisBorder, self._canvasBorder - self._canvasAxisOffset - 1, f"{image.width()}")
-        painter.drawText(self._canvasBorder - self._canvasAxisBorder - 6, self._canvasBorder - self._canvasAxisOffset - 1, "X")
-
-        painter.rotate(-90)
-        painter.drawText(-(self._canvasBorder + self._canvasAxisOffset + 5), self._canvasBorder - self._canvasAxisOffset - 1, f"{image.height()}")
-        painter.rotate(90)
-
+        # draw the canvas Axis
+        self._drawCanvasAxis(image, painter)
+        # Draw the canvas size
+        self._drawCanvasSize(image, painter)
+        
         # Draw the image
-        painter.drawPixmap(self._canvasBorder, self._canvasBorder, image)
+        painter.drawPixmap(self._canvas_padding, self._canvas_padding, image)
         painter.end()
 
         return expandedImage
@@ -170,55 +260,49 @@ class Viewport(QWidget):
         return self._scaleImageCache
 
     def _paintCanvasTiled(self, painter: QPainter):
-        canvas = self._scaleImageToViewport(self.getImage(), self._imageScale)
-        if all(self.tileCanvas): #tile diagonally
-            for x in range(-self.tileCanvasRange, self.tileCanvasRange+1):
-                for y in range(-self.tileCanvasRange, self.tileCanvasRange+1):
-                    painter.drawPixmap(self._imagePosition.x() + (canvas.width()*x), self._imagePosition.y() + (canvas.height()*y), canvas)
+        canvas = self._scaleImageToViewport(self.getImage(), self.image_scale)
         
+        # draws the canvas to the viewport multiple, multiple times
+        if all(self.tile_canvas): #tile into a large square
+            for x in range(-self.tiling_range, self.tiling_range+1):
+                for y in range(-self.tiling_range, self.tiling_range+1):
+                    painter.drawPixmap(self.image_position.x() + (canvas.width()*x), self.image_position.y() + (canvas.height()*y), canvas)
+        
+        #case for only axis tiling
         else:
-            if self.tileCanvas[0]: #tile Horizontal 
-                for x in range(-self.tileCanvasRange, self.tileCanvasRange+1):
-                    painter.drawPixmap(self._imagePosition.x() + (canvas.width()*x), self._imagePosition.y(), canvas)
+            if self.tile_canvas[0]: #tile Horizontal 
+                for x in range(-self.tiling_range, self.tiling_range+1):
+                    painter.drawPixmap(self.image_position.x() + (canvas.width()*x), self.image_position.y(), canvas)
 
-            if self.tileCanvas[1]: #tile Vertical
-                for y in range(-self.tileCanvasRange, self.tileCanvasRange+1):
-                    painter.drawPixmap(self._imagePosition.x(), self._imagePosition.y() + (canvas.height()*y), canvas)
+            if self.tile_canvas[1]: #tile Vertical
+                for y in range(-self.tiling_range, self.tiling_range+1):
+                    painter.drawPixmap(self.image_position.x(), self.image_position.y() + (canvas.height()*y), canvas)
         
-        #draw outline around canvas
-        pen = QPen()
-        pen.setColor(QColor(0,0,0,255))
-        pen.setWidth(2)
-        painter.setPen(pen)
-        painter.drawRect(canvas.rect().adjusted(self._imagePosition.x(),self._imagePosition.y(),self._imagePosition.x(),self._imagePosition.y()))
-        
+        #draw border around canvas
+        self._drawCanvasBorder(painter, canvas)
+
+        #draw the filepath
+        self._drawCanvasFilepath(painter, canvas)
+
+    
+
     def _paintCanvas(self,painter: QPainter):
-        if self.tileCanvas[0] or self.tileCanvas[1]:
+        if self.tile_canvas[0] or self.tile_canvas[1]:
             self._paintCanvasTiled(painter)
             return
+        #style canvas at its native scale
+        canvas = self._styleViewport(self.getImage(),self.image_scale) 
 
-        canvas = self._styleViewport(self.getImage(),self._imageScale)
-
-        canvas = self._scaleImageToViewport(canvas,self._imageScale)
-
-        #draw outline around canvas
-        border = self._canvasBorder * self._imageScale
-        c = canvas.copy()
-        c = c.rect()
-        c.moveTo(self._imagePosition)
-        c.adjust(border-2,border-2,-border + 2,-border + 2)
-        
-        painter.fillRect(c,QColor(0,0,0,255))
-
-
-        pen = QPen(QColor(0,0,0,55))
-        pen.setWidth(2)
-        painter.setPen(pen)
-        painter.drawLine(c.bottomLeft()+QPoint(1,2),c.bottomRight()+QPoint(0,2))
-        painter.drawLine(c.topRight()+QPoint(2,1),c.bottomRight()+QPoint(2,2))
+        canvas = self._scaleImageToViewport(canvas,self.image_scale) #scale to viewport
         
         #draw the canvas to Viewport
-        painter.drawPixmap(self._imagePosition.x(), self._imagePosition.y(), canvas)
+        painter.drawPixmap(self.image_position.x(), self.image_position.y(), canvas)
+
+        #draw border around canvas
+        self._drawCanvasBorder(painter, canvas)
+        
+        #draw the filepath
+        self._drawCanvasFilepath(painter, canvas)
         
         
 
@@ -227,8 +311,8 @@ class Viewport(QWidget):
         painter.setBrush(QColor(100, 200, 150))  # Fill color
         painter.setPen(QColor(50, 100, 75))  # Border color     
 
-        img_pos = self._imagePosition
-        img_scale = self._imageScale
+        img_pos = self.image_position
+        img_scale = self.image_scale
         
 
         x = self._mapFromCanvas(self.cursorPos).x()
@@ -245,18 +329,10 @@ class Viewport(QWidget):
                 img_scale
             ))
 
+    
+
     def _paintViewport(self,painter: QPainter):
-        painter.save()
-        painter.setPen(QColor(255, 255, 255,125))  # Set the pen color to white
-
-        xPos,yPos = self._imagePosition.x(), self._imagePosition.y()
-        font = QFont("pixelated", 16)  # You can specify the font family, size, and weight
-        painter.setFont(font)
-
-        #draw filepath
-        painter.drawText(xPos+(10*self._imageScale),yPos+20+((self.canvas.height() + 10)*self._imageScale), self.canvas.filepath)
-
-        painter.restore()   
+        pass
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -266,8 +342,10 @@ class Viewport(QWidget):
         self._paintPixelPosition(painter)
 
         self._paintViewport(painter)
+
         
         
+        painter.end()
 
         super().paintEvent(event)
 
@@ -278,8 +356,8 @@ class Viewport(QWidget):
         size = self.canvas.rect()
         x = position.x()
         y = position.y()
-        canvasW = size.width() * self._imageScale
-        canvasH = size.height() * self._imageScale
+        canvasW = size.width() * self.image_scale
+        canvasH = size.height() * self.image_scale
 
         bSize = 10
         tempx = x
@@ -295,29 +373,29 @@ class Viewport(QWidget):
         if y - (canvasH // 2) > self.height() - bSize:
             tempy = self.height() - bSize - canvasH
 
-        self._imagePosition.setX(tempx)
-        self._imagePosition.setY(tempy)
+        self.image_position.setX(tempx)
+        self.image_position.setY(tempy)
 
     def _mapToCanvas(self, point:QPoint) -> QPoint:
         """
         Maps the viewport coordinates to canvas
         """
 
-        img_pos = self._imagePosition
-        img_scale = self._imageScale
+        img_pos = self.image_position
+        img_scale = self.image_scale
 
         # Calculate position in canvas coordinates
-        canvas_x = (point.x() - img_pos.x()) / img_scale - self._canvasBorder
-        canvas_y = (point.y() - img_pos.y()) / img_scale - self._canvasBorder
+        canvas_x = (point.x() - img_pos.x()) / img_scale - self._canvas_padding
+        canvas_y = (point.y() - img_pos.y()) / img_scale - self._canvas_padding
 
         # Tile cursorpos if tiling is enabled
-        if self.tileCanvas[0]:
-            canvas_x += self._canvasBorder
-            if canvas_x <= self.canvas.width()*(self.tileCanvasRange+1) and canvas_x >= -self.canvas.width()*(self.tileCanvasRange):
+        if self.tile_canvas[0]:
+            canvas_x += self._canvas_padding
+            if canvas_x <= self.canvas.width()*(self.tiling_range+1) and canvas_x >= -self.canvas.width()*(self.tiling_range):
                 canvas_x = canvas_x % self.canvas.width()
-        if self.tileCanvas[1]:
-            canvas_y += self._canvasBorder
-            if canvas_y <= self.canvas.height()*(self.tileCanvasRange+1) and canvas_y >= -self.canvas.height()*(self.tileCanvasRange):
+        if self.tile_canvas[1]:
+            canvas_y += self._canvas_padding
+            if canvas_y <= self.canvas.height()*(self.tiling_range+1) and canvas_y >= -self.canvas.height()*(self.tiling_range):
                 canvas_y = canvas_y % self.canvas.height()
 
         # Return the mapped QPoint
@@ -328,19 +406,19 @@ class Viewport(QWidget):
         Map the canvas coordinates to the viewport
         """
 
-        img_pos = self._imagePosition
-        img_scale = self._imageScale
+        img_pos = self.image_position
+        img_scale = self.image_scale
 
         # Calculate position in viewport coordinates
-        viewport_x = point.x() * img_scale + img_pos.x() + (self._canvasBorder * img_scale)
-        viewport_y = point.y() * img_scale + img_pos.y() + (self._canvasBorder * img_scale)
+        viewport_x = point.x() * img_scale + img_pos.x() + (self._canvas_padding * img_scale)
+        viewport_y = point.y() * img_scale + img_pos.y() + (self._canvas_padding * img_scale)
 
         # Tile cursorpos if tiling is enabled
-        if self.tileCanvas[0]:
-            viewport_x -= (self._canvasBorder * img_scale)
+        if self.tile_canvas[0]:
+            viewport_x -= (self._canvas_padding * img_scale)
             
-        if self.tileCanvas[1]:
-            viewport_y -= (self._canvasBorder * img_scale)
+        if self.tile_canvas[1]:
+            viewport_y -= (self._canvas_padding * img_scale)
             
 
         # Return the mapped QPoint
@@ -367,10 +445,10 @@ class Viewport(QWidget):
             self.toolClick()
 
         if self.mouseClicks.right:
-            self._imageScale += 0.1
+            self.image_scale += 0.1
         
         if self.mouseClicks.middle:
-            self.offset = self._imagePosition - self.mousePressPos
+            self.offset = self.image_position - self.mousePressPos
             self.moveCanvas(self.mousePos + self.offset)
         
     def onMouseMove(self):
@@ -394,7 +472,7 @@ class Viewport(QWidget):
         Adjusts the image position only if the mouse position is within the imagePixmap bounds.
         """
 
-        min_scale, max_scale = self.imageScaleRange
+        min_scale, max_scale = self.image_scale_range
         delta = event.angleDelta().y()
         zoomFactor = 1.1  # This determines how quickly the scaling changes
 
@@ -402,20 +480,20 @@ class Viewport(QWidget):
         log_max_scale = log(max_scale)
 
         if delta > 0:
-            log_scale = log(self._imageScale) + log(zoomFactor)
+            log_scale = log(self.image_scale) + log(zoomFactor)
         else:
-            log_scale = log(self._imageScale) - log(zoomFactor)
+            log_scale = log(self.image_scale) - log(zoomFactor)
 
         log_scale = max(log_min_scale, min(log_max_scale, log_scale))
 
 
-        image_rect = self._scaleImageCache.rect().translated(self._imagePosition)
+        image_rect = self._scaleImageCache.rect().translated(self.image_position)
         if image_rect.contains(self.mousePos):
-            image_pos_before_zoom = (self.mousePos - self._imagePosition) / self._imageScale
-            self._imageScale = exp(log_scale)
-            self._imagePosition = self.mousePos - image_pos_before_zoom * self._imageScale
+            image_pos_before_zoom = (self.mousePos - self.image_position) / self.image_scale
+            self.image_scale = exp(log_scale)
+            self.image_position = self.mousePos - image_pos_before_zoom * self.image_scale
         else:
-            self._imageScale = exp(log_scale)
+            self.image_scale = exp(log_scale)
         
         self.update()
     

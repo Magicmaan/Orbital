@@ -28,7 +28,7 @@ from GUI.Decorators import PixelBorder, sizePolicy, mouseClick
 @PixelBorder
 @mouseClick
 class RGBSlider(QWidget):
-    def __init__(self, parent):
+    def __init__(self, parent, target=None):
         super().__init__()
         self.parent = parent
 
@@ -46,6 +46,7 @@ class RGBSlider(QWidget):
         self.layout().setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.label.setFont(QFont("pixelated", 12))
 
+        self.target = target
         self.value = 0
         self.toAdd = 0
     def onMouseclick(self):
@@ -79,19 +80,45 @@ class RGBSlider(QWidget):
         self.toAdd = 0
         self.label.setText(str(self.value))
         
+        #send update to colorWheel
         self.parent.colorWheel.setRGB(self.value)
+
         self.setCursor(Qt.ArrowCursor)
         QCursor.setPos(self.mapToGlobal(self.rect().center()))
         self.update()
 
 
 class ColourPicker(QWidget):
+    #TODO:
+    # 1. Rework so interactions go through this widget.
+    #    i.e. mouse event on spectrum -> sends event with colour to ColourPicker to update
+    #         -> spectrum gets current colour from ColourPicker
+    #         -> sliders get current colour from ColourPicker
+    #    
+    #    This way, the ColourPicker is the central hub for colour changes.
+    #    The child widgets shouldn't store any information, they are only an interface.
+
+    # 2. Add colour sliders , the R slider currently is a test.
+    #    - tap will enter text entry
+    #    - drag will change value by modifer, displaying it whilst dragging
+    #      - will show percentage, and hue change as background
+    #      - shift to step by 10?
+
+    # 3. Improve spectrumWidget
+    #    - display opacity nicely
+    #    - show complementary colour on wheel
+    #    - update from colour picker
+    #    - shift to move radius
+    #    - alt to rotate around wheel
+
+
+
     def __init__(self, parent=None):
         super().__init__(parent)
 
         self.setContentsMargins(20,20,20,20)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.colorWheel = RGBSpectrumWidget()
+        self.colorWheel = RGBSpectrumWidget(self)
         self.colorWheel.setSize(255,160)
 
         self.opacitySlider = QSlider(Qt.Horizontal)
@@ -131,7 +158,9 @@ class ColourPicker(QWidget):
         
         self.greenlabel.setFont(QFont("pixelated", 12))
         self.bluelabel.setFont(QFont("pixelated", 12))
-        self.colorWheel.colourChanged_S.connect(self._updateColour)
+        
+
+        #self.redlabel.valueChanged.connect(self._updateColour)
 
 
     def getOpacity(self) -> int:
@@ -154,6 +183,7 @@ class ColourPicker(QWidget):
     def _updateColour(self, value):
         self.colour = value
 
+        self.colorWheel.setRGB(value.red(),value.green(),value.blue())
         self.redlabel.label.setText(str(value.red()))
         self.greenlabel.setText(str(value.green()))
         self.bluelabel.setText(str(value.blue()))
@@ -182,7 +212,8 @@ class RGBSpectrumWidget(QWidget):
         self.setWindowTitle("RGB Spectrum")
         # Enable mouse tracking
         self.setMouseTracking(True)
-        
+        self.parent = parent
+
         # Set margins and fixed size
         self.setContentsMargins(5, 5, 5, 5)
         self.resize(160, 160)
@@ -191,8 +222,8 @@ class RGBSpectrumWidget(QWidget):
         # Cache for the spectrum pixmap
         self._PixmapSpectrum = None
         # Display modes for the spectrum
-        self._displayModes = (self._RGBSpectrum, self._HSVSpectrum, self._HSLSpectrum, self._CMYKSpectrum)
-        self.currentDisplayMode = self._displayModes[1]  # Default to HSV Spectrum
+        self._spectrumModes = (self._RGBSpectrum, self._HSVSpectrum, self._HSLSpectrum, self._CMYKSpectrum)
+        self.currentSpectrum = self._spectrumModes[1]  # Default to HSV Spectrum
         
         # Background fill color
         self.backgroundFill = QColor(255, 255, 255, 255)
@@ -202,10 +233,12 @@ class RGBSpectrumWidget(QWidget):
         self.opacity = 255
 
         
-        
-        
+        self.colourChanged_S.connect(self.parent._updateColour)
         # Connect colour changed signal to the current tool's update colour method
         self.colourChanged_S.connect(QApplication.instance().program.tools.current_tool._updateColour)
+
+        
+
         
         
         
@@ -268,7 +301,7 @@ class RGBSpectrumWidget(QWidget):
 
     def generateSpectrum(self):
         width,height = 160,160  
-        self._PixmapSpectrum = self.currentDisplayMode(width,height)
+        self._PixmapSpectrum = self.currentSpectrum(width,height)
 
     def paintEvent(self, event):
         if self._PixmapSpectrum is None or self._PixmapSpectrum.size() != self.size():
@@ -302,8 +335,6 @@ class RGBSpectrumWidget(QWidget):
         painter.setPen(pen)
         pos = QRect(x-selectorSize/2,y-selectorSize/2,selectorSize,selectorSize)
         painter.drawRoundedRect(pos,2,2)
-
-        
 
     def snaptoCircle(self):
          # Get the center of the widget
@@ -380,9 +411,10 @@ class RGBSpectrumWidget(QWidget):
     @Slot()
     def getRGB(self) -> QColor:
         if not self.colour or self.mousePos != self.lastMousePos:
-            self.colour = self._getColourAtPoint(self.mousePos)
-            #print("COLOUR IS:" + str(self.colour.getRgb()))
-            self.colourChanged_S.emit(self.colour)
+            colour = self._getColourAtPoint(self.mousePos)
+
+            self.setRGB(colour.red(),colour.green(),colour.blue())
+
             self.backgroundFill = self.colour
             
         return self.colour

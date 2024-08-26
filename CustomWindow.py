@@ -67,11 +67,9 @@ class customWindow(QWidget):
         self.dragging = False
         self.mousePressPos = QPoint()
         self.resize_edge_size = 5  # Width of the area where resizing is possible
-        self.lastResize = -1
+        self.last_resize = -1
 
         print("Custom Window Enabled")
-
-        
 
     def customTitleBar(self):
         # Titlebar init
@@ -87,10 +85,10 @@ class customWindow(QWidget):
         tbar = self.titlebar
         pos = tbar.mapFromGlobal(event.globalPos())
         sideHit = self._detectEdge(pos)
-        if tbar.rect().contains(pos) and tbar.rect().contains(self.mousePressPos) and self.dragging and self.lastResize == (-1):
+        if tbar.rect().contains(pos) and tbar.rect().contains(self.mousePressPos) and self.dragging and self.last_resize == (-1):
             self.customDrag(event,sideHit)
             
-        elif self.dragging and (any(self._detectEdge(self.mousePressPos)) or self.lastResize!=-1):
+        elif self.dragging and (any(self._detectEdge(self.mousePressPos)) or self.last_resize!=-1):
             self.customResize(event,sideHit)
         
     def customResize(self,event,sideHit):
@@ -100,38 +98,36 @@ class customWindow(QWidget):
         self._updateCursor(sideHit)
 
         pos = self.parent.mapFromGlobal(event.globalPos())
-        if sideHit[1] or self.lastResize==1: # Right side resize
-            self.parent.setFixedWidth(max(pos.x(),self.parent.minSize.width()))
-            self.lastResize = 1
-        elif sideHit[0] or self.lastResize==0: # Left Side resize
-            resizeTo = max(self.parent.width() - (event.globalPos().x() - self.parent.pos().x()),self.parent.minSize.width())
-            if resizeTo != self.parent.minSize.width():
+        if sideHit[1] or self.last_resize==1: # Right side resize
+            self.parent.setFixedWidth(max(pos.x(),self.parent.min_size.width()))
+            self.last_resize = 1
+        elif sideHit[0] or self.last_resize==0: # Left Side resize
+            resizeTo = max(self.parent.width() - (event.globalPos().x() - self.parent.pos().x()),self.parent.min_size.width())
+            if resizeTo != self.parent.min_size.width():
                 self.parent.setFixedWidth(resizeTo)
                 self.parent.move(event.globalPos().x() ,self.parent.pos().y())
-                self.lastResize = 0
+                self.last_resize = 0
 
-        if sideHit[3] or self.lastResize==3: # Bottom side resize
-            self.parent.setFixedHeight(max(pos.y(),self.parent.minSize.height()))
-            self.lastResize = 3
+        if sideHit[3] or self.last_resize==3: # Bottom side resize
+            self.parent.setFixedHeight(max(pos.y(),self.parent.min_size.height()))
+            self.last_resize = 3
 
-        elif sideHit[2] or self.lastResize==2:  # Top side resize
-            resizeTo = max(self.parent.height() - (event.globalPos().y() - self.parent.pos().y()),self.parent.minSize.height())
+        elif sideHit[2] or self.last_resize==2:  # Top side resize
+            resizeTo = max(self.parent.height() - (event.globalPos().y() - self.parent.pos().y()),self.parent.min_size.height())
             print(resizeTo)
-            if resizeTo != self.parent.minSize.height():
+            if resizeTo != self.parent.min_size.height():
                 self.parent.setFixedHeight(resizeTo)
                 self.parent.move(self.parent.pos().x(), event.globalPos().y())
-                self.lastResize = 2
+                self.last_resize = 2
 
     def customDrag(self,event,sideHit):
         if self.isMaximised():
             self.toggleMaximiseWindow()
 
         self._updateCursor(sideHit)
-
-        windowPos = self.parent.pos()
         self.parent.move(event.globalPos() - self.mousePressPos)
 
-        self.lastResize = -1
+        self.last_resize = -1
 
     def toggleMaximiseWindow(self):
         if self.isMaximised():
@@ -147,7 +143,7 @@ class customWindow(QWidget):
 
     def mouseReleaseEvent(self, event):
         self.dragging = False
-        self.lastResize = -1
+        self.last_resize = -1
 
     def _detectEdge(self,pos):
         Left,Right,Top,Bot = False,False,False,False
@@ -176,33 +172,34 @@ class customWindow(QWidget):
 
         self.setCursor(cursor)
 
-    
-
     def mouseDoubleClickEvent(self, event):
         if event.button() == Qt.LeftButton:
             tbar = self.titlebar
             pos = tbar.mapFromGlobal(event.globalPos())
-            if tbar.rect().contains(pos)and self.lastResize == (-1):
+            if tbar.rect().contains(pos)and self.last_resize == (-1):
                 if self.parent.isMaximized():
                     self.parent.showNormal()
                 else:
                     self.parent.showMaximized()
     
     
-
-    
-
-
 class defaultWindow(QWidget):
     def __init__(self, parent: QMainWindow) -> None:
         super().__init__(parent)
         self.parent = parent
+        config = parent.config
+        self.setObjectName("defaultWindow")
+
         self.parent.titlebar = False
         self.resize(self.parent.size())
         self.setSizePolicy(QSizePolicy.Expanding,QSizePolicy.Expanding)
-        self.setObjectName("defaultWindow")
+        
 
-        self.setLayout(QGridLayout())
+        self.setLayout(QVBoxLayout())
+
+        #setup window
+        self.setWindowTitle(f"{config.window['title']} {config.version}")
+        self.parent.setWindowIcon(QPixmap(config.window["icon_path"]))
         removePadding(self)
 
         print("Default Window Enabled")
