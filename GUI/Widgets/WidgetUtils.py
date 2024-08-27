@@ -62,7 +62,7 @@ def drawPixelBorder(object, painter: QPainter,pmap:QPixmap,edgeSize=2,scale=2,Fi
             painter.fillRect(shrunk_rect, pmap.toImage().pixelColor(pmap.width()//2, pmap.height()//2))  # Green color
     
     #sides ----------------------------------------------------------------
-    top_cutout = QRect(es,0,w-es-1,2)
+    top_cutout = QRect(es,0,w-es-1,3)
     _drawHorizontal(painter, pmap, top_cutout, 0, es, scale)
 
     bot_cutout = QRect(es,h-es,w-es-1,h)

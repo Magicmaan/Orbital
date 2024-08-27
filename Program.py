@@ -80,6 +80,9 @@ class Program(QMainWindow):
             self.window_container = self.window.layout()
 
         self.tools = ToolHandler()
+        self.canvas = Viewport()
+
+        
 
         self.context_bar = Contextbar()
         self.window_container.addWidget(self.context_bar)
@@ -117,7 +120,7 @@ class Program(QMainWindow):
         
 
         #Create and configure the Canvas widget
-        self.canvas = Viewport()
+        
         self.current_target = self.canvas
         #self.canvas.setStyleSheet("border: purple 5px solid;")
         # Add the Canvas widget to the layout

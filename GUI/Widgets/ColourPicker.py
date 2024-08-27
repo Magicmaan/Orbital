@@ -183,7 +183,7 @@ class ColourPicker(QWidget):
     def _updateColour(self, value):
         self.colour = value
 
-        self.colorWheel.setRGB(value.red(),value.green(),value.blue())
+        #self.colorWheel.setRGB(value.red(),value.green(),value.blue())
         self.redlabel.label.setText(str(value.red()))
         self.greenlabel.setText(str(value.green()))
         self.bluelabel.setText(str(value.blue()))
@@ -200,6 +200,11 @@ class ColourPicker(QWidget):
 @PixelBorder
 @mouseClick
 class RGBSpectrumWidget(QWidget):
+    #TODO: Fix coordinate out of range on mouse move
+    #      to do with centering, ur not correcting for offset
+    #      - fix by getting the center of the widget and then calculating the distance from the center
+
+
     colourChanged_S = Signal(QColor)
 
     def __init__(self, parent=None):

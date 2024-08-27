@@ -33,6 +33,7 @@ class Viewport(QWidget):
         self.program = QApplication.instance().program
 
         config = self.program.getConfig().viewport
+        self.config = config
 
         self.tiling_range = config["tiling_range"]
         self.tile_canvas = [config["tile_x"], config["tile_y"]]
@@ -308,8 +309,8 @@ class Viewport(QWidget):
 
     def _paintPixelPosition(self, painter: QPainter):
         # Set the brush and pen for the square
-        painter.setBrush(QColor(100, 200, 150))  # Fill color
-        painter.setPen(QColor(50, 100, 75))  # Border color     
+        painter.setBrush(self.program.colourPicker.getRGBA())  # Fill color
+        painter.setPen(QColor(0,0,0,0))  # Border color     
 
         img_pos = self.image_position
         img_scale = self.image_scale
@@ -330,6 +331,7 @@ class Viewport(QWidget):
             ))
 
     
+    
 
     def _paintViewport(self,painter: QPainter):
         pass
@@ -342,8 +344,6 @@ class Viewport(QWidget):
         self._paintPixelPosition(painter)
 
         self._paintViewport(painter)
-
-        
         
         painter.end()
 
@@ -423,6 +423,30 @@ class Viewport(QWidget):
 
         # Return the mapped QPoint
         return QPoint(int(viewport_x), int(viewport_y))
+
+    def toggleTiling(self,x:bool=None,y:bool=None) -> list[bool]:
+        """if x=True, will toggle x, if y=True, will toggle y
+           returns the current tiling state of the canvas
+        """
+        if x and y: #if both, just either turn all on or off
+            if any(self.tile_canvas):
+                self.tile_canvas = [False,False]
+            else:
+                self.tile_canvas = [True,True]
+        elif x: #if toggle x
+            if self.tile_canvas[0]:
+                self.tile_canvas[0] = False
+            else:
+                self.tile_canvas[0] = True
+        elif y: #if toggle y
+            if self.tile_canvas[1]:
+                self.tile_canvas[1] = False
+            else:
+                self.tile_canvas[1] = True
+
+        self.update()
+
+        return self.tile_canvas
 
     def toolClick(self):
         custom_data = toolClickEvent(self.cursorPos,self.lastcursorPos,self.getImage())

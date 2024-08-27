@@ -66,8 +66,8 @@ class Contextbar(QMenuBar):
         #openFile.triggered.connect(self.newFile)
 
         self.addMenuCust("File")
-        self.addMenuAction("New File",self.newFile,self.FileMenu)
-        self.addMenuAction("Open     File",self.newFile,self.FileMenu)
+        self.addMenuAction("New File",self.newFile,(),self.FileMenu)
+        self.addMenuAction("Open File",self.newFile,(),self.FileMenu)
 
         self.addMenuCust("Edit")
         self.addMenuCust("Canvas")
@@ -76,6 +76,22 @@ class Contextbar(QMenuBar):
         self.addMenuCust("View")
         self.addMenuCust("Help")
         self.addMenuCust("Open File")
+
+        self.addMenuCust("Tiling",self.CanvasMenu)
+        self.addMenuAction("Toggle Tiling",
+                           func=self.program.canvas.toggleTiling,
+                           args=(True,True),
+                           menu=self.CanvasMenu.TilingMenu)
+        self.addMenuAction("Toggle X",
+                           func=self.program.canvas.toggleTiling,
+                           args=(True,False),
+                           menu=self.CanvasMenu.TilingMenu)
+        self.addMenuAction("Toggle Y",
+                           func=self.program.canvas.toggleTiling,
+                           args=(False,True),
+                           menu=self.CanvasMenu.TilingMenu)
+        
+        #self.CanvasMenu.TilingMenu.addAction("Toggle Tiling")
 
 
     def newMenu(self,menuName, parentMenu=None):
@@ -103,14 +119,18 @@ class Contextbar(QMenuBar):
         
         #parentMenu.addMenu(temp)
     
-    def addMenuAction(self,actionName,func,menu=None):
+    def addMenuAction(self, actionName: str, func, args: list, menu: QMenu = None) -> QAction:
         if not menu:
-            menu = self
+            menu = self 
+        action = QAction(QIcon("Resources/icons/plus.png").pixmap(self.icon_size,self.icon_size), 
+                        actionName,
+                         menu)
 
-        action = QAction(actionName,menu)
         menu.addAction(action)
-        
-        action.triggered.connect(func)
+
+        action.triggered.connect(lambda: func(*args))
+
+        return action
         
     
         
