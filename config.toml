@@ -28,7 +28,7 @@ tiling_range = 2
 tile_x = true
 tile_y = true
 
-border_color = 'black'
+border_colour = 'black'
 border_thickness = 2
 
 show_border = true

@@ -35,22 +35,14 @@ class Viewport(QWidget):
         config = self.program.getConfig().viewport
         self.config = config
 
-        self.tiling_range = config["tiling_range"]
-        self.tile_canvas = [config["tile_x"], config["tile_y"]]
-        self.show_border = config["show_border"]
+        #apply config to class
+        for key, value in self.config.items():
+            setattr(self, key, value)
 
+        
         self.border_color = QColor()
-        self.border_color.setNamedColor("black")
+        self.border_color.setNamedColor(config["border_colour"])
         self.border_thickness = config["border_thickness"]
-
-        self.show_axis = config["show_axis"]
-        self.show_size = config["show_size"]
-        self.show_filepath = config["show_filepath"]
-        self.show_transparency_grid = config["show_transparency_grid"]
-
-
-        self.snap_to_grid = config["snap_to_grid"]
-        self.snap_to_edge = config["snap_to_edge"]
 
 
         #initalise canvas view variables
@@ -68,7 +60,6 @@ class Viewport(QWidget):
         self._canvas_padding = 10
         self._canvasAxisBorder = 1
         self._canvasAxisOffset = 4
-
 
         #cursor setup for viewport
         self.cursorPos = QPoint(0, 0)
@@ -167,9 +158,9 @@ class Viewport(QWidget):
         ypos = self.image_position.y() + 20 + ((self.canvas.height() + 10)*self.image_scale)
 
         
-        if self.tile_canvas[0]:
+        if self.tile_x:
             xpos -= self.tiling_range * image.width()
-        if self.tile_canvas[1]:
+        if self.tile_y:
             ypos += self.tiling_range * image.height()
                 
         painter.drawText(xpos,
@@ -190,14 +181,14 @@ class Viewport(QWidget):
         inner_rect = inner_rect.adjusted(offset, offset, -offset, -offset)
         inner_rect.adjust(self.image_position.x(), self.image_position.y(), self.image_position.x(), self.image_position.y())
         
-        if any(self.tile_canvas):
+        if self.tile_x or self.tile_y:
             inner_rect.adjust(-offset, -offset, offset, offset)
             outer_rect = inner_rect.adjusted(0,0,0,0)
 
-            if self.tile_canvas[0]:
+            if self.tile_x:
                 outer_rect.adjust(-self.tiling_range * canvas.width(), 0, self.tiling_range * canvas.width(), 0)
                 
-            if self.tile_canvas[1]:
+            if self.tile_y:
                 outer_rect.adjust(0, -self.tiling_range * canvas.height(), 0, self.tiling_range * canvas.height())  
             
             rects.append(outer_rect)
@@ -264,18 +255,18 @@ class Viewport(QWidget):
         canvas = self._scaleImageToViewport(self.getImage(), self.image_scale)
         
         # draws the canvas to the viewport multiple, multiple times
-        if all(self.tile_canvas): #tile into a large square
+        if self.tile_x and self.tile_y: #tile into a large square
             for x in range(-self.tiling_range, self.tiling_range+1):
                 for y in range(-self.tiling_range, self.tiling_range+1):
                     painter.drawPixmap(self.image_position.x() + (canvas.width()*x), self.image_position.y() + (canvas.height()*y), canvas)
         
         #case for only axis tiling
         else:
-            if self.tile_canvas[0]: #tile Horizontal 
+            if self.tile_x: #tile Horizontal 
                 for x in range(-self.tiling_range, self.tiling_range+1):
                     painter.drawPixmap(self.image_position.x() + (canvas.width()*x), self.image_position.y(), canvas)
 
-            if self.tile_canvas[1]: #tile Vertical
+            if self.tile_y: #tile Vertical
                 for y in range(-self.tiling_range, self.tiling_range+1):
                     painter.drawPixmap(self.image_position.x(), self.image_position.y() + (canvas.height()*y), canvas)
         
@@ -288,7 +279,7 @@ class Viewport(QWidget):
     
 
     def _paintCanvas(self,painter: QPainter):
-        if self.tile_canvas[0] or self.tile_canvas[1]:
+        if self.tile_x or self.tile_y:
             self._paintCanvasTiled(painter)
             return
         #style canvas at its native scale
@@ -389,11 +380,11 @@ class Viewport(QWidget):
         canvas_y = (point.y() - img_pos.y()) / img_scale - self._canvas_padding
 
         # Tile cursorpos if tiling is enabled
-        if self.tile_canvas[0]:
+        if self.tile_x:
             canvas_x += self._canvas_padding
             if canvas_x <= self.canvas.width()*(self.tiling_range+1) and canvas_x >= -self.canvas.width()*(self.tiling_range):
                 canvas_x = canvas_x % self.canvas.width()
-        if self.tile_canvas[1]:
+        if self.tile_y:
             canvas_y += self._canvas_padding
             if canvas_y <= self.canvas.height()*(self.tiling_range+1) and canvas_y >= -self.canvas.height()*(self.tiling_range):
                 canvas_y = canvas_y % self.canvas.height()
@@ -414,10 +405,10 @@ class Viewport(QWidget):
         viewport_y = point.y() * img_scale + img_pos.y() + (self._canvas_padding * img_scale)
 
         # Tile cursorpos if tiling is enabled
-        if self.tile_canvas[0]:
+        if self.tile_x:
             viewport_x -= (self._canvas_padding * img_scale)
             
-        if self.tile_canvas[1]:
+        if self.tile_x:
             viewport_y -= (self._canvas_padding * img_scale)
             
 
@@ -429,24 +420,18 @@ class Viewport(QWidget):
            returns the current tiling state of the canvas
         """
         if x and y: #if both, just either turn all on or off
-            if any(self.tile_canvas):
-                self.tile_canvas = [False,False]
+            if self.tile_x or self.tile_y:
+                self.tile_x,self.tile_y = False,False
             else:
-                self.tile_canvas = [True,True]
+                self.tile_x,self.tile_y = True,True
         elif x: #if toggle x
-            if self.tile_canvas[0]:
-                self.tile_canvas[0] = False
-            else:
-                self.tile_canvas[0] = True
+            self.tile_x = not self.tile_x
         elif y: #if toggle y
-            if self.tile_canvas[1]:
-                self.tile_canvas[1] = False
-            else:
-                self.tile_canvas[1] = True
+            self.tile_y = not self.tile_y
 
         self.update()
 
-        return self.tile_canvas
+        return (self.tile_x,self.tile_y)
 
     def toolClick(self):
         custom_data = toolClickEvent(self.cursorPos,self.lastcursorPos,self.getImage())

@@ -1,5 +1,6 @@
+from typing import Any
 from PySide6.QtWidgets import QApplication, QWidget, QSizePolicy, QVBoxLayout, QSlider, QLabel, QHBoxLayout
-from PySide6.QtGui import QMouseEvent, QPainter, QColor, QPixmap, qRgb, QPen, QFont, QCursor
+from PySide6.QtGui import QMouseEvent, QPainter, QColor, QPixmap, qRgb, QPen, QFont, QCursor, QTransform
 from PySide6.QtCore import Qt, QPoint, QRect, Signal, Slot
 
 from math import sqrt, atan2, sin, cos, tan, degrees, radians
@@ -47,11 +48,19 @@ class RGBSlider(QWidget):
         self.label.setFont(QFont("pixelated", 12))
 
         self.target = target
-        self.value = 0
+        self.value = 21
         self.toAdd = 0
     def onMouseclick(self):
         QCursor.setPos(self.mapToGlobal(self.rect().center()))
         self.update()
+    
+    def __call__(self, *args: Any, **kwds: Any) -> Any:
+        print("called")
+        return self.value
+        #return super().__call__(*args, **kwds)
+    
+    def __str__(self) -> str:
+        return str(self.value)
 
     def onMouseMove(self):
         if self.mouseClicks.left:
@@ -111,29 +120,45 @@ class ColourPicker(QWidget):
     #    - shift to move radius
     #    - alt to rotate around wheel
 
+    # 4. Add palette
+    #    - show palette
+    #    - show palette on colour wheel DONE
+
 
 
     def __init__(self, parent=None):
         super().__init__(parent)
 
+        self.primary_colour = QColor(255,0,0,255)
+        self.secondary_colour = QColor(0,255,0,255)
+
+        self.custom_palette = [
+            QColor(255, 0, 0),
+            QColor(0, 255, 0),
+            QColor(0, 0, 255),
+            QColor(255, 255, 0),
+            QColor(255, 0, 255)
+        ]
+
+        self.colourHistory = []
+
+        # Set background color using setStyleSheet
+        self.setLayout(QVBoxLayout())
         self.setContentsMargins(20,20,20,20)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.layout().setSpacing(0)
+        self.layout().setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.layout().setContentsMargins(10,10,10,10)
+
         self.colorWheel = RGBSpectrumWidget(self)
         self.colorWheel.setSize(255,160)
+        self.layout().addWidget(self.colorWheel)
 
         self.opacitySlider = QSlider(Qt.Horizontal)
         self.opacitySlider.setContentsMargins(0,0,0,0)
         self.opacitySlider.setRange(0,255)
         self.opacitySlider.setValue(255)
-
-        # Set background color using setStyleSheet
-        self.setStyleSheet("background-color: lightblue;")
-        self.setLayout(QVBoxLayout())
-        self.layout().addWidget(self.colorWheel)
         self.layout().addWidget(self.opacitySlider)
-        self.layout().setSpacing(0)
-        self.layout().setAlignment(Qt.AlignmentFlag.AlignTop)
-        self.layout().setContentsMargins(10,10,10,10)
         self.opacitySlider.valueChanged.connect(self._updateAlpha)
 
 
@@ -142,9 +167,6 @@ class ColourPicker(QWidget):
         sliderscontainer.setFixedSize(180,30)
         self.layout().addWidget(sliderscontainer)
         sliderscontainer.layout().setSpacing(10)
-
-
-
         self.redlabel = RGBSlider(self)
         #self.redlabel.setRange(0,255)
         #self.redlabel.setFixedWidth(50)
@@ -154,13 +176,16 @@ class ColourPicker(QWidget):
         sliderscontainer.layout().addWidget(self.greenlabel)
         self.bluelabel = QLabel("0")
         sliderscontainer.layout().addWidget(self.bluelabel)
-        
-        
         self.greenlabel.setFont(QFont("pixelated", 12))
         self.bluelabel.setFont(QFont("pixelated", 12))
         
+        print(f"output of calling print: {self.redlabel}")
+        m = self.redlabel
+        print(f"output of calling call: {m}")
+    
+    
 
-        #self.redlabel.valueChanged.connect(self._updateColour)
+
 
 
     def getOpacity(self) -> int:
@@ -213,6 +238,12 @@ class RGBSpectrumWidget(QWidget):
         """
         super().__init__(parent)
         
+        #TODO:
+        # 1. Add a signal to notify the parent of the colour change
+        # 2. Config
+        # 3  change spectrum mode
+        # 4. store spectrum mode in enum
+
         # Set window title
         self.setWindowTitle("RGB Spectrum")
         # Enable mouse tracking
@@ -229,6 +260,16 @@ class RGBSpectrumWidget(QWidget):
         # Display modes for the spectrum
         self._spectrumModes = (self._RGBSpectrum, self._HSVSpectrum, self._HSLSpectrum, self._CMYKSpectrum)
         self.currentSpectrum = self._spectrumModes[1]  # Default to HSV Spectrum
+
+        self.use_pallette = True
+        self.palette_gradient = True
+        self.palette_sort = True
+        self.custom_palette = (QColor(255,0,0), QColor(0,255,0), QColor(0,0,255), QColor(255,255,0), QColor(255,0,255))
+        self.custom_palette = [QColor(255, 0, 0), QColor(0, 255, 0), QColor(0, 0, 255), QColor(255, 255, 0), QColor(255, 0, 255)]
+        self.step_angle = 0 #1 - *
+        self.step_radius = 0 #0-1
+
+        self.spectrum_size = 160
         
         # Background fill color
         self.backgroundFill = QColor(255, 255, 255, 255)
@@ -248,11 +289,59 @@ class RGBSpectrumWidget(QWidget):
         
         
 
-    def _RGBSpectrum(self):
+    def _RGBSpectrum(self,radiusmodifier):
         pass
+    
+    def genPalette(self,angle_mode:str="hueF",radius_mode:str="saturation") -> list[QColor]:
+        """Generate a gradient palette for around a colour wheel\n
+        angle_mode: controls what changes across angle (hue, saturation, value)\n
+        radius_mode: controls what changes across radius (hue, saturation, value)"""
+        if not self.palette_gradient:
+            if self.palette_sort:
+                return sorted(self.custom_palette)
+            return self.custom_palette
 
-    def _HSVSpectrum(self,width,height):
 
+        steps = self.step_angle
+        if not steps:
+            steps = 10
+        elif steps < 3:
+            steps = 3
+
+        gradient = []
+
+        #get just values from palette using the angle_mode selector
+        values = [getattr(color,angle_mode)() for color in self.custom_palette]
+
+        #sort order based on value
+        if self.palette_sort:
+           values = sorted([getattr(color,angle_mode)() for color in self.custom_palette])
+        
+        
+
+        #add transition between each value in palette
+        for i in range(len(values)-1):
+            start_hue = values[i]
+            end_hue = values[i+1]
+            #for no. steps, add gradient value
+            for step in range(steps):
+                hue = start_hue + (end_hue - start_hue) * step / steps
+                gradient.append(QColor.fromHsvF(hue,1,1))
+
+
+        #add transition from last to first
+        for step in range(steps):
+            hue = values[-1]  + (values[0] - values[-1] ) * step / steps
+            gradient.append(QColor.fromHsvF(hue,1,1))
+            
+        
+        return gradient
+
+          
+    
+
+    def _HSVSpectrum(self,width,height,step_angle=0,step_radius=0,colour_list:list[QColor]=None):
+        #TODO: Unfix the step_angle and step_radius
         radius = min(width, height) // 2
 
         # Create a QPixmap to cache the HSV color wheel
@@ -260,7 +349,6 @@ class RGBSpectrumWidget(QWidget):
         pixmap.fill(Qt.transparent)
 
         painter = QPainter(pixmap)
-
         center_x = width // 2
         center_y = height // 2
 
@@ -269,23 +357,45 @@ class RGBSpectrumWidget(QWidget):
                 dx = x - center_x
                 dy = y - center_y
                 distance = sqrt(dx*dx + dy*dy)
+                if distance > radius:
+                    continue
                 
-                if distance <= radius:
-                    # Calculate the hue based on the angle from the center
-                    hue = (degrees(atan2(dy, dx)) + 360) % 360
 
-                    # Saturation is based on the distance from the center
-                    saturation = distance / radius
+                # Calculate the hue angle, value is 0-360
+                hue = (degrees(atan2(dy, dx)) + 360) % 360
 
-                    # Fixed value (brightness)
-                    value = 1.0
+                # Saturation is based on the distance from the center, value is 0-1
+                saturation = distance / radius
+                # Fixed brightness
+                value = 1.0
 
-                    # Convert HSV to QColor
-                    color = QColor()
-                    color.setHsvF(hue / 360, saturation, value)
-                    painter.setPen(color)
-                    painter.drawPoint(x, y)
+                #set stepping
+                hue = round(hue / self.step_angle) * self.step_angle if self.step_angle else hue
+                saturation = round(saturation / self.step_radius) * self.step_radius if self.step_radius else saturation
+
+                
+
+                if self.use_pallette:
+                    #take in 0-360, and clamp to palette size
+                    palette_gradient = self.genPalette()
+                    val = hue / 360
+                    hue_index = val * len(palette_gradient)
+
+                    # Retrieve the color from palette_gradient at the clamped hue position
+                    gradient_color = palette_gradient[int(hue_index)]
+                    hue = gradient_color.hue()
+
+                color = QColor()
+                color.setHsvF(hue / 360, saturation, value)
+                painter.setPen(color)
+                painter.drawPoint(x, y)
+        
+
         painter.end()
+
+        # Rotate the pixmap by -90 degrees
+        pixmap = pixmap.transformed(QTransform().rotate(-90))
+
 
         return pixmap
 
@@ -305,11 +415,10 @@ class RGBSpectrumWidget(QWidget):
         pass
 
     def generateSpectrum(self):
-        width,height = 160,160  
-        self._PixmapSpectrum = self.currentSpectrum(width,height)
+        self._PixmapSpectrum = self.currentSpectrum(self.spectrum_size,self.spectrum_size)
 
     def paintEvent(self, event):
-        if self._PixmapSpectrum is None or self._PixmapSpectrum.size() != self.size():
+        if self._PixmapSpectrum is None:
             self.generateSpectrum()
 
         painter = QPainter(self)
@@ -367,27 +476,48 @@ class RGBSpectrumWidget(QWidget):
         
         self.mousePos = closest_point
 
-    def _getColourAtPoint(self,position:QPoint) -> QColor:
+    def _getColourAtPoint(self, position: QPoint) -> QColor:
+        #TODO:
+        # 1. Fix the coordinate out of range error
+        #    its to do with being calculated, it assumes whole widget is valid range
+        circlerect = self._PixmapSpectrum.rect()
+        circlerect.moveCenter(self.rect().center())
+
+
+
         # Get the center of the widget
         center = QPoint(self.width() // 2, self.height() // 2)
-        
+
         # Calculate the radius of the circle (assuming a square widget)
         radius = min(self.width(), self.height()) // 2
+
         # Calculate the distance from the center to the position
         dx = position.x() - center.x()
+        if dx < 0:
+            if dx < -radius:
+                dx = -radius
+        elif dx > 0:
+            if dx > radius:
+                dx = radius 
         dy = position.y() - center.y()
         distance_squared = dx ** 2 + dy ** 2
-        
         pos = position
         # Check if the position is within the circle
-        if distance_squared <= radius ** 2:
-            pos = position
-        else:
-            pos = self.snaptoCircle()
-        
+        if distance_squared > radius ** 2:
+            # Calculate the closest point on the edge of the circle
+            distance = sqrt(distance_squared)
+            scale = radius / distance
+            closest_x = center.x() + int(dx * scale)
+            closest_y = center.y() + int(dy * scale)
+            pos = QPoint(closest_x, closest_y)
+            position = pos
+
+        pos = QPoint(pos.x() - 48,pos.y())
+
+        #print(f"Position: {pos}")
         pmap = self._PixmapSpectrum
         colour = pmap.toImage().pixelColor(pos)
-        colour.setAlpha(self.opacity)
+
         return colour
 
     def onMouseClick(self):

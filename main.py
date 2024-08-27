@@ -8,7 +8,7 @@ from Program import Program
 #TODO:
 # 1. add toml file for configuration
 # 2. add hot-loading of configuration + assets
-# 3. Add Theme config (to make 2 more fun)
+# 3. Add Theme config (to make 2 more funf)
 
 
 if __name__ == "__main__":
