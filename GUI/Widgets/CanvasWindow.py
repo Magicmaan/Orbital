@@ -300,7 +300,7 @@ class Viewport(QWidget):
 
     def _paintPixelPosition(self, painter: QPainter):
         # Set the brush and pen for the square
-        painter.setBrush(self.program.colourPicker.getRGBA())  # Fill color
+        painter.setBrush(self.program.colourPicker.getPrimaryColour())  # Fill color
         painter.setPen(QColor(0,0,0,0))  # Border color     
 
         img_pos = self.image_position

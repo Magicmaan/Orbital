@@ -29,12 +29,13 @@ from GUI.Decorators import PixelBorder, sizePolicy, mouseClick
 @PixelBorder
 @mouseClick
 class RGBSlider(QWidget):
-    def __init__(self, parent, target=None):
+    def __init__(self, parent=None,mode:str="red"):
         super().__init__()
         self.parent = parent
 
-        self.setSizePolicy(QSizePolicy.Minimum,QSizePolicy.Minimum)
-        self.setFixedWidth(50)
+        self.setSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.Minimum)
+
+        #self.setMinimumWidth(50)
         self.setFixedHeight(20)
         self.setContentsMargins(0,0,0,0)
         
@@ -47,8 +48,8 @@ class RGBSlider(QWidget):
         self.layout().setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.label.setFont(QFont("pixelated", 12))
 
-        self.target = target
-        self.value = 21
+        self.mode = mode
+        self.value = 0
         self.toAdd = 0
     def onMouseclick(self):
         QCursor.setPos(self.mapToGlobal(self.rect().center()))
@@ -80,18 +81,22 @@ class RGBSlider(QWidget):
         self.update()
     
     def onMouseRelease(self):
-        self.value += int(self.toAdd)
-        if self.value < 0:
-            self.value = 0
-        elif self.value > 255:
-            self.value = 255
-
-        self.toAdd = 0
-        self.label.setText(str(self.value))
-        
         #send update to colorWheel
-        self.parent.colorWheel.setRGB(self.value)
+        self.parent.setPrimaryColour(QColor(self.parent.getPrimaryColour().red() + (self.toAdd if self.mode == "red" else 0),
+                                            self.parent.getPrimaryColour().green() + (self.toAdd if self.mode == "green" else 0),
+                                            self.parent.getPrimaryColour().blue() + (self.toAdd if self.mode == "blue" else 0)))
+        self.toAdd = 0
+        self.value = self.parent.getPrimaryColour()
 
+
+        if self.mode == "red":self.value = self.value.red() 
+        if self.mode == "green":self.value = self.value.green()
+        if self.mode == "blue":self.value = self.value.blue()
+
+
+
+
+        self.label.setText(str(self.value))
         self.setCursor(Qt.ArrowCursor)
         QCursor.setPos(self.mapToGlobal(self.rect().center()))
         self.update()
@@ -124,13 +129,13 @@ class ColourPicker(QWidget):
     #    - show palette
     #    - show palette on colour wheel DONE
 
-
+    colourChanged_S = Signal(QColor)
 
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.primary_colour = QColor(255,0,0,255)
-        self.secondary_colour = QColor(0,255,0,255)
+        self._primary_colour = QColor(255,0,0,255)
+        self._secondary_colour = QColor(0,255,0,255)
 
         self.custom_palette = [
             QColor(255, 0, 0),
@@ -140,7 +145,7 @@ class ColourPicker(QWidget):
             QColor(255, 0, 255)
         ]
 
-        self.colourHistory = []
+        self.colour_history = []
 
         # Set background color using setStyleSheet
         self.setLayout(QVBoxLayout())
@@ -163,28 +168,69 @@ class ColourPicker(QWidget):
 
 
         sliderscontainer = QWidget()
+        sliderscontainer.resize(self.width(),50)
         sliderscontainer.setLayout(QHBoxLayout())
+        sliderscontainer.setSizePolicy(QSizePolicy.Expanding,QSizePolicy.Fixed)
+        sliderscontainer.layout().setAlignment(Qt.AlignmentFlag.AlignJustify)
         sliderscontainer.setFixedSize(180,30)
         self.layout().addWidget(sliderscontainer)
         sliderscontainer.layout().setSpacing(10)
-        self.redlabel = RGBSlider(self)
-        #self.redlabel.setRange(0,255)
-        #self.redlabel.setFixedWidth(50)
-        #self.redlabel.setSizePolicy(QSizePolicy.Minimum,QSizePolicy.Minimum)
-        sliderscontainer.layout().addWidget(self.redlabel)
-        self.greenlabel = QLabel("0")
-        sliderscontainer.layout().addWidget(self.greenlabel)
-        self.bluelabel = QLabel("0")
-        sliderscontainer.layout().addWidget(self.bluelabel)
-        self.greenlabel.setFont(QFont("pixelated", 12))
-        self.bluelabel.setFont(QFont("pixelated", 12))
-        
-        print(f"output of calling print: {self.redlabel}")
-        m = self.redlabel
-        print(f"output of calling call: {m}")
-    
-    
 
+        self.redlabel = RGBSlider(self,"red")
+        sliderscontainer.layout().addWidget(self.redlabel)
+        self.greenlabel = RGBSlider(self,"green")
+        sliderscontainer.layout().addWidget(self.greenlabel)
+        self.bluelabel = RGBSlider(self,"blue")
+        sliderscontainer.layout().addWidget(self.bluelabel)
+
+        
+
+
+
+
+        
+
+    
+    def getPrimaryColour(self) -> QColor:
+        return self._primary_colour
+
+    def setPrimaryColour(self,colour:QColor):
+        self.colourChanged_S.connect(QApplication.instance().program.tools.current_tool._updateColour)
+
+        if colour.red() < 0:
+            colour.setRed(0)
+        if colour.red() > 255:
+            colour.setRed(255)
+
+        #TODO: stop duplicates
+        self.colour_history.append(self._primary_colour)
+
+
+        self._primary_colour = colour
+        self.colour = colour
+        self.colorWheel
+
+        self.colourChanged_S.emit(colour)
+
+        self.redlabel.label.setText(str(colour.red()))
+        self.greenlabel.label.setText(str(colour.green()))
+        self.bluelabel.label.setText(str(colour.blue()))
+
+        self.colorWheel.colour = colour
+
+        self.update()
+
+    
+    
+    def getPrimaryColour(self) -> QColor:
+        return self._primary_colour
+    
+    def setSecondaryColour(self,colour:QColor):
+        self.colour_history.append(self._secondary_colour)
+        self._secondary_colour = colour
+    
+    def getSecondaryColour(self) -> QColor:
+        return self._secondary_colour
 
 
 
@@ -204,14 +250,7 @@ class ColourPicker(QWidget):
     def setColour(self,colour:QColor):
         pass
 
-    @Slot(QColor)
-    def _updateColour(self, value):
-        self.colour = value
-
-        #self.colorWheel.setRGB(value.red(),value.green(),value.blue())
-        self.redlabel.label.setText(str(value.red()))
-        self.greenlabel.setText(str(value.green()))
-        self.bluelabel.setText(str(value.blue()))
+        
 
 
     
@@ -243,6 +282,7 @@ class RGBSpectrumWidget(QWidget):
         # 2. Config
         # 3  change spectrum mode
         # 4. store spectrum mode in enum
+        # 5. If colour != whats on spectrum, set icon to a cross    
 
         # Set window title
         self.setWindowTitle("RGB Spectrum")
@@ -264,8 +304,7 @@ class RGBSpectrumWidget(QWidget):
         self.use_pallette = True
         self.palette_gradient = True
         self.palette_sort = True
-        self.custom_palette = (QColor(255,0,0), QColor(0,255,0), QColor(0,0,255), QColor(255,255,0), QColor(255,0,255))
-        self.custom_palette = [QColor(255, 0, 0), QColor(0, 255, 0), QColor(0, 0, 255), QColor(255, 255, 0), QColor(255, 0, 255)]
+        self.custom_palette = self.parent.custom_palette
         self.step_angle = 0 #1 - *
         self.step_radius = 0 #0-1
 
@@ -279,9 +318,9 @@ class RGBSpectrumWidget(QWidget):
         self.opacity = 255
 
         
-        self.colourChanged_S.connect(self.parent._updateColour)
+        #self.colourChanged_S.connect(self.parent._updateColour)
         # Connect colour changed signal to the current tool's update colour method
-        self.colourChanged_S.connect(QApplication.instance().program.tools.current_tool._updateColour)
+        
 
         
 
@@ -522,14 +561,16 @@ class RGBSpectrumWidget(QWidget):
 
     def onMouseClick(self):
         self.snaptoCircle()
+        self.update()
 
     def onMouseMove(self):
         self.snaptoCircle()
 
         if self.mouseClicks.left:
-            self.getRGB()
-            self.update()
-        
+            self.updateColour()
+
+        self.update()
+    
     def setRGB(self,red:int=None,green:int=None,blue:int=None) -> None:
         if red:
             if 0 <= red <= 255:
@@ -540,16 +581,17 @@ class RGBSpectrumWidget(QWidget):
         if blue:
             if 0 <= blue <= 255:
                 self.colour.setBlue(blue)
-        
+        self.parent.setPrimaryColour(self.colour)
+
+        self.colour = self.parent.getPrimaryColour()
         self.colourChanged_S.emit(self.colour)
 
-    @Slot()
-    def getRGB(self) -> QColor:
+
+    def updateColour(self) -> QColor:
         if not self.colour or self.mousePos != self.lastMousePos:
             colour = self._getColourAtPoint(self.mousePos)
 
             self.setRGB(colour.red(),colour.green(),colour.blue())
-
             self.backgroundFill = self.colour
             
         return self.colour
